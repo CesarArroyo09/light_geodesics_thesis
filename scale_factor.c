@@ -29,7 +29,7 @@ double integrando_cosmictime(double a, void *parameters)
   double h0 = p->hubble;
   double om = p->omega_m;
   double ol = p->omega_l;
-  double f = (a/h0)/(sqrt(om*a + ol*pow(a,4))); //Integrate to cosmic time
+  double f = (1/h0)/(sqrt(om*pow(a,-1) + ol*pow(a,2))); //Integrate to cosmic time
   
   return f;
 }
