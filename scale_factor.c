@@ -9,6 +9,9 @@ It produces a .dat file with the scale factor in terms of the conformal time and
 #include <gsl/gsl_spline.h>
 
 #define NLINES 11
+#define H0 100.0
+#define OMEGAMAT 0.3
+#define OMEGALAM 0.7
 
 /*Structure with parameters needed for the function to integrate
 hubble: The Hubble parameter
@@ -47,15 +50,23 @@ double integrando_conformaltime(double a, void *parameters)
   return f;
 }
 
+/*Derivative of the scale factor as a function of scale factor*/
+double der_scale_factor(double a)
+{
+  double adot = H0*sqrt(OMEGAMAT*pow(a,-1)+OMEGALAM*pow(a,2));
+  return adot;
+}
+
 int main (void)
 {
+  /*Variable for temporary saving derivative of scale factor in interations*/
+  double adot;
+
   struct Iparams parameters; // Structure of parameters for functions to integrate
-  double om = 0.3, ol = 1.0-om; //Density parameters
-  double h0 = 100; //Hubble parameter
   /*Asign values to the structure of parameters*/
-  parameters.hubble = h0;
-  parameters.omega_m = om;
-  parameters.omega_l = ol;
+  parameters.hubble = H0;
+  parameters.omega_m = OMEGAMAT;
+  parameters.omega_l = OMEGALAM;
 
   /*File to be written with data*/
   FILE *pf;
@@ -91,12 +102,13 @@ int main (void)
   w1 = gsl_integration_workspace_alloc(limit);
   w2 = gsl_integration_workspace_alloc(limit);
 
-  for(b = 0.001;b <= 1.0;b += 0.001)
+  for(b = 0.001;b <= 4.0;b += 0.001)
     {
       /*Numerical integration of functions*/
       gsl_integration_qags(&Fcosmic, a, b, 0, epsrel, limit, w1, &result1, &error1);
       gsl_integration_qags(&Fconformal, a, b, 0, epsrel, limit, w2, &result2, &error2);
-      fprintf(pf, "%.12f %.12f %.12f\n", result1, result2, b);
+      adot = der_scale_factor(b);
+      fprintf(pf, "%.12f %.12f %.12f %.12f\n", result1, result2, b, adot);
       /*Save values in an array*/
       //cos_tim[j] = result1; con_tim[j] = result2; sca_fac[j] = b;
       //j = j+1;
