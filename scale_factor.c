@@ -1,5 +1,7 @@
 /*This program is the first step in solving the Merlin-Salgado equation.
-It produces a .dat file with the scale factor in terms of the conformal time and the cosmic time.*/
+It produces a .dat file with the scale factor in terms of the conformal time and the cosmic time.
+The .dat file columns are formatted in the next way:
+cosmic_time   conformal_fime   scale_factor   cosmic_time_der_scale_factor*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,7 +11,7 @@ It produces a .dat file with the scale factor in terms of the conformal time and
 #include <gsl/gsl_spline.h>
 
 #define NLINES 11
-#define H0 100.0
+#define H0 1.0
 #define OMEGAMAT 0.3
 #define OMEGALAM 0.7
 
@@ -91,18 +93,18 @@ int main (void)
   Fconformal.function = &integrando_conformaltime;
   Fconformal.params = &parameters;
 
-  int j=1; //Index for arrays
+  //int j=1; //Index for arrays
   /*Arrays for cosmic time, conformal time and scale factor*/
-  double cos_tim[NLINES], con_tim[NLINES], sca_fac[NLINES];
+  //double cos_tim[NLINES], con_tim[NLINES], sca_fac[NLINES];
   
   /*Initial values*/
-  cos_tim[0] = 0.0; con_tim[0]=0.0; sca_fac[0] = 0.0;
+  // cos_tim[0] = 0.0; con_tim[0]=0.0; sca_fac[0] = 0.0;
 
   /*Allocate space in memory*/
   w1 = gsl_integration_workspace_alloc(limit);
   w2 = gsl_integration_workspace_alloc(limit);
 
-  for(b = 0.001;b <= 4.0;b += 0.001)
+  for(b = 0.001;b <= 1.0;b += 0.001)
     {
       /*Numerical integration of functions*/
       gsl_integration_qags(&Fcosmic, a, b, 0, epsrel, limit, w1, &result1, &error1);
