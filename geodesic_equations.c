@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#define A 1.0
-#define G 1.0
-#define M 1.0
+#define A 1.0     //Distance parameter of the perturbations
+#define G 1.0     //Gravitational constant
+#define M 1.0     //Mass of the perturbation
 
 /*Function for the gravitational potential to be used*/
 double potential(double x1, double x2, double x3)
@@ -30,8 +30,10 @@ double geodesic_equation_1(double aprime, double a, double p0, double p1, double
   return f;
 }
 
-/*Function for the second differential equation for the geodesics.*/
-double geodesic_equation_i(double aprime, double a, double pi, double pj1, double pj2, double pj3, double eta, double xi, double xj1, double xj2)
+/*Function for the ith differential equation for the geodesics, where i=1,2,3.
+xi is the ith coordinate, pi is the ith momentum.
+The other position and momentum quantities are denoted xj1, xj2, pj1 and pj2. These quantities appear in a symmetric way in the equation so in doesn't matter the order.*/
+double geodesic_equation_i(double aprime, double a, double p0, double pi, double pj1, double pj2, double pj3, double eta, double xi, double xj1, double xj2)
 {
   double f = ith_der_potential(xi,xj1,xj2)*pow(p0,2) + 2*(aprime/a)*po*pi - ith_der_potential(xi,xj1,xj2)*(pow(pi,2)-pow(pj1,2)-pow(pj2,2)) - 2*ith_der_potential(xj1,xi,xj2)*pi*pj1 - 2*ith_der_potential(xj2,xi,xj1)*pi*pj2;
   return f;
