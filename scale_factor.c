@@ -8,12 +8,12 @@ cosmic_time   conformal_fime   scale_factor   cosmic_time_der_scale_factor*/
 #include <math.h>
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_spline.h>
+
 
 #define NLINES 11
-#define H0 1.0
-#define OMEGAMAT 0.3
-#define OMEGALAM 0.7
+#define H0 1.0          //Hubble paramater
+#define OMEGAMAT 0.3    //Omega matter
+#define OMEGALAM 0.7    //Omega lambda
 
 /*Structure with parameters needed for the function to integrate
 hubble: The Hubble parameter
@@ -93,13 +93,6 @@ int main (void)
   Fconformal.function = &integrando_conformaltime;
   Fconformal.params = &parameters;
 
-  //int j=1; //Index for arrays
-  /*Arrays for cosmic time, conformal time and scale factor*/
-  //double cos_tim[NLINES], con_tim[NLINES], sca_fac[NLINES];
-  
-  /*Initial values*/
-  // cos_tim[0] = 0.0; con_tim[0]=0.0; sca_fac[0] = 0.0;
-
   /*Allocate space in memory*/
   w1 = gsl_integration_workspace_alloc(limit);
   w2 = gsl_integration_workspace_alloc(limit);
@@ -111,9 +104,6 @@ int main (void)
       gsl_integration_qags(&Fconformal, a, b, 0, epsrel, limit, w2, &result2, &error2);
       adot = der_scale_factor(b);
       fprintf(pf, "%.12f %.12f %.12f %.12f\n", result1, result2, b, adot);
-      /*Save values in an array*/
-      //cos_tim[j] = result1; con_tim[j] = result2; sca_fac[j] = b;
-      //j = j+1;
     }
 
   /*Close streams and free space in memory*/

@@ -1,4 +1,6 @@
-/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime*/
+/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime.
+The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$.
+Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,6 +9,7 @@
 #define A 1.0     //Distance parameter of the perturbations
 #define G 1.0     //Gravitational constant
 #define M 1.0     //Mass of the perturbation
+#define NLINES 999 //Number of lines in frw.dat file
 
 /*Function for the gravitational potential to be used*/
 double potential(double x1, double x2, double x3)
@@ -35,6 +38,22 @@ xi is the ith coordinate, pi is the ith momentum.
 The other position and momentum quantities are denoted xj1, xj2, pj1 and pj2. These quantities appear in a symmetric way in the equation so in doesn't matter the order.*/
 double geodesic_equation_i(double aprime, double a, double p0, double pi, double pj1, double pj2, double pj3, double eta, double xi, double xj1, double xj2)
 {
-  double f = ith_der_potential(xi,xj1,xj2)*pow(p0,2) + 2*(aprime/a)*po*pi - ith_der_potential(xi,xj1,xj2)*(pow(pi,2)-pow(pj1,2)-pow(pj2,2)) - 2*ith_der_potential(xj1,xi,xj2)*pi*pj1 - 2*ith_der_potential(xj2,xi,xj1)*pi*pj2;
+  double f = ith_der_potential(xi,xj1,xj2)*pow(p0,2) + 2*(aprime/a)*p0*pi - ith_der_potential(xi,xj1,xj2)*(pow(pi,2)-pow(pj1,2)-pow(pj2,2)) - 2*ith_der_potential(xj1,xi,xj2)*pi*pj1 - 2*ith_der_potential(xj2,xi,xj1)*pi*pj2;
   return f;
+}
+
+int main(void)
+{
+  int i;
+  FILE *frw;
+  frw = fopen("frw.dat","r");
+  double cosmictime, eta[NLINES], scale_factor[NLINES], derscalefactor[NLINES];
+  for(i=0; i<NLINES; i++)
+    {
+      fscanf(frw,"%lf %lf %lf %lf", &cosmictime, &eta[i], &scale_factor[i], &derscalefactor[i]);
+    }
+  for(i=0; i<NLINES; i++)
+    {
+      printf("%f %f %f\n", eta[i], scale_factor[i], derscalefactor[i]);
+    }
 }
