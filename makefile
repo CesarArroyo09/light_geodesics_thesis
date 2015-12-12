@@ -10,14 +10,7 @@ scale_factor:
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
 # 	mv $@ $@.x
 
-ode2:
-
-	  echo Estoy compilando $@.c
-	  $(CC) $(CFLAGS) $@.c -o $@.o
-	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
-
-ode3:
-
+geodesic_equations:
 	  echo Estoy compilando $@.c
 	  $(CC) $(CFLAGS) $@.c -o $@.o
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
