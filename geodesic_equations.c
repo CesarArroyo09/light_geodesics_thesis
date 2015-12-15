@@ -88,10 +88,10 @@ void euler1(double a, double aprime, double *eta, double *x1, double *x2, double
 
   /*Calculation of the increments*/
   deta = *p0*DLAMBDA; dx1 = *p1*DLAMBDA; dx2 = *p2*DLAMBDA; dx3 = *p3*DLAMBDA;
-  dp0 = geodesic_equation_0(aprime, a, *p0, *p1, *p2, *p3, *eta, *x1, *x2, *x3, *x4);
-  dp1 = geodesic_equation_i(aprime, a, *p0, *p1, *p2 *p3, *eta, *x1, *x2, *x3);
-  dp2 = geodesic_equation_i(aprime, a, *p0, *p2, *p1 *p3, *eta, *x2, *x1, *x3);
-  dp3 = geodesic_equation_i(aprime, a, *p0, *p3, *p2 *p1, *eta, *x3, *x2, *x1);
+  dp0 = geodesic_equation_0(aprime, a, *p0, *p1, *p2, *p3, *eta, *x1, *x2, *x3, *x4)*DLAMBDA;
+  dp1 = geodesic_equation_i(aprime, a, *p0, *p1, *p2 *p3, *eta, *x1, *x2, *x3)*DLAMBDA;
+  dp2 = geodesic_equation_i(aprime, a, *p0, *p2, *p1 *p3, *eta, *x2, *x1, *x3)*DLAMBDA;
+  dp3 = geodesic_equation_i(aprime, a, *p0, *p3, *p2 *p1, *eta, *x3, *x2, *x1)*DLAMBDA;
 
   /*New values of the variables of the differential equation. Since we are using pointers, when called the routine the value of variable change.*/
   *eta = *eta + deta; *x1 = *x1 + dx1; *x2 = *x2 + dx2; *x3 = *x3 + dx3;
