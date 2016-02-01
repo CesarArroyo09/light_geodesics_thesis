@@ -115,13 +115,13 @@ int main(void)
   /************************************************************************************/
 
   /*Initial conditions*/
-  double eta = 0.1; // x1 = 0, x2 = 0, x3 = 0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0;
+  double eta = 0.2; // x1 = 0, x2 = 0, x3 = 0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0;
 
   /*Initial values for scale factor and derivative of scale factor*/
   double a = interp_scale_factor(spline1, eta, acc1);
   double aprime = interp_der_scale_factor(spline2, eta, acc2);
 
-  printf("%.12lf %.12lf",a,aprime);
+  printf("%.12lf %.12lf\n",a,aprime);
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
