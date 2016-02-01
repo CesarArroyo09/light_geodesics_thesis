@@ -16,36 +16,18 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 
 /*Interpolation of scale factor at time eta.
 Argument conf_time is an array with the conformal times. scale_factor is an array of scale factors which corresponds in array position to the conformal time array.*/
-double interp_scale_factor(double conf_time[], double scale_factor[], double eta)
+double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
-  /*Allocate space in memory*/
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();  //Acceleration type object (for index lookup)
-  gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, NLINES);  //Spline type object (define interpolation type and space in memory)
-
-  gsl_spline_init(spline, conf_time, scale_factor, NLINES);  //Initializes spline object for data conf_time, scale_factor of size NLINES
   double a = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
-  
-  /*Free space in memory*/
-  gsl_spline_free(spline);  //Free memory of spline object
-  gsl_interp_accel_free(acc);  //Free memory of accel object
 
   return a;  //Return scale factor at a time eta
 }
 
 /*Interpolation of derivative of scale factor at time eta.
 This function works the same way as interp_scale_factor.*/
-double interp_der_scale_factor(double conf_time[], double der_scale_factor[], double eta)
+double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
-  /*Allocate space in memory*/
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();  //Acceleration type object (for index lookup)
-  gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, NLINES);  //Spline type object (define interpolation type and space in memory)
-
-  gsl_spline_init(spline, conf_time, der_scale_factor, NLINES);  //Initializes spline object for data conf_time, der_scale_factor of size NLINES
   double adot = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
-  
-  /*Free space in memory*/
-  gsl_spline_free(spline);  //Free memory of spline object
-  gsl_interp_accel_free(acc);  //Free memory of accel object
 
   return adot;  //Return derivative of scale factor at a time eta
 }
@@ -118,12 +100,28 @@ int main(void)
       fscanf(frw,"%lf %lf %lf %lf", &cosmictime, &conftime[i], &scale_factor[i], &der_scale_factor[i]);
     }
   
+  /*** Initializes objects for interpolation. 1 is for interpolation of scale factor, 2 is for interpolation of derivative of scale factor ***/
+
+  /*Allocate space in memory*/
+  gsl_interp_accel *acc1 = gsl_interp_accel_alloc();  //Acceleration type object (for index lookup)
+  gsl_interp_accel *acc2 = gsl_interp_accel_alloc();
+  gsl_spline *spline1 = gsl_spline_alloc(gsl_interp_cspline, NLINES);  //Spline type object (define interpolation type and space in memory, works for both)
+  gsl_spline *spline2 = gsl_spline_alloc(gsl_interp_cspline, NLINES);
+
+  /*Initializes objects for interpolation*/
+  gsl_spline_init(spline1, conftime, scale_factor, NLINES);  //Initializes spline object for data conf_time, scale_factor of size NLINES
+  gsl_spline_init(spline2, conftime, der_scale_factor, NLINES);  //Initializes spline object for data conf_time, der_scale_factor of size NLINES
+
+  /************************************************************************************/
+
   /*Initial conditions*/
   double eta = 0.2; // x1 = 0, x2 = 0, x3 = 0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0;
 
   /*Initial values for scale factor and derivative of scale factor*/
-  double a = interp_scale_factor(conftime, scale_factor, eta);
-  double aprime = interp_der_scale_factor(conftime, der_scale_factor, eta);
+  double a = interp_scale_factor(spline1, eta, acc1);
+  double aprime = interp_der_scale_factor(spline2, eta, acc2);
+
+  printf("%.12lf %.12lf\n",a,aprime);
 
   printf("%.12lf %.12lf\n",a,aprime);
 
@@ -141,4 +139,11 @@ int main(void)
   //    a = interp_scale_factor(conftime, scale_factor, eta);
   //    aprime = interp_der_scale_factor(conftime, der_scale_factor, eta);
   //  }
+
+  /** Releasing all used space in memory **/
+  fclose(geodesic); //Close file storing the results
+  gsl_spline_free(spline1);  //Free memory of spline object
+  gsl_spline_free(spline2);
+  gsl_interp_accel_free(acc1);  //Free memory of accel object
+  gsl_interp_accel_free(acc2);
 }
