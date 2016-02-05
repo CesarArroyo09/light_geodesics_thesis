@@ -8,14 +8,14 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #include <gsl/gsl_errno.h>          //GSL error management module
 #include <gsl/gsl_spline.h>         //GSL interpolation module
 
-#define A 1.0     //Distance parameter of the perturbations
-#define G 1.0     //Gravitational constant
-#define M 1.0     //Mass of the perturbation
+#define A 50.0     //Distance parameter of the perturbations
+#define G 43007.01     //Gravitational constant
+#define M 50.0     //Mass of the perturbation
 #define NLINES 999 //Number of lines in frw.dat file
 #define DLAMBDA 0.001   //Geodesics parameter step
 
 /*Interpolation of scale factor at time eta.
-Argument conf_time is an array with the conformal times. scale_factor is an array of scale factors which corresponds in array position to the conformal time array.*/
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of conformal time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
 double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
   double a = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
@@ -24,7 +24,7 @@ double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc
 }
 
 /*Interpolation of derivative of scale factor at time eta.
-This function works the same way as interp_scale_factor.*/
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of conformal time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
 double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
   double adot = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
@@ -35,7 +35,7 @@ double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel 
 /*Function for the gravitational potential to be used*/
 double potential(double x1, double x2, double x3)
 {
-  return G*M/(sqrt(A*A + x1*x1 + x2*x2 +x3*x3));
+  return -G*M/(sqrt(A*A + x1*x1 + x2*x2 +x3*x3));
 }
 
 /*First partial derivative respect to the ith coordinate.
@@ -43,7 +43,7 @@ First argument xi denotes the ith coordinate.
 The xj's denote the other coordinates. The order doesn't matter since they appear in the same way in the equation.*/
 double ith_der_potential(double xi, double xj1, double xj2)
 {
-  return -G*M*xi/(pow(A*A+xi*xi+xj1*xj1+xj2*xj2, 1.5));
+  return G*M*xi/(pow(A*A+xi*xi+xj1*xj1+xj2*xj2, 1.5));
 }
 
 /*This is the function of the first differential equation for the geodesics.
@@ -99,6 +99,9 @@ int main(void)
     {
       fscanf(frw,"%lf %lf %lf %lf", &cosmictime, &conftime[i], &scale_factor[i], &der_scale_factor[i]);
     }
+
+  /*Free space in memory*/
+  fclose(frw);
   
   /*** Initializes objects for interpolation. 1 is for interpolation of scale factor, 2 is for interpolation of derivative of scale factor ***/
 
@@ -115,15 +118,62 @@ int main(void)
   /************************************************************************************/
 
   /*Initial conditions*/
-  double eta = 0.2; // x1 = 0, x2 = 0, x3 = 0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0;
+  double eta = 0.12; // x1 = 0, x2 = 0, x3 = 0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0;
 
   /*Initial values for scale factor and derivative of scale factor*/
-  double a = interp_scale_factor(spline1, eta, acc1);
-  double aprime = interp_der_scale_factor(spline2, eta, acc2);
+  //double a = interp_scale_factor(spline1, eta, acc1);
+  //double aprime = interp_der_scale_factor(spline2, eta, acc2);
 
-  printf("%.12lf %.12lf\n",a,aprime);
+  FILE *graph;
+  graph = fopen("graph.dat","w");
 
-  printf("%.12lf %.12lf\n",a,aprime);
+  /*Graphication of functions depending on time*/
+  for(eta = 0.12; eta <= 3.29; eta = eta + 0.01)
+    {
+      double a = interp_scale_factor(spline1, eta, acc1);
+      double aprime = interp_der_scale_factor(spline2, eta, acc2);
+      fprintf(graph, "%.12lf %.12lf %.12lf %.12lf\n", eta, a, aprime, aprime/a);
+    }
+
+  fclose(graph);
+
+  /*Graphication of functions depending on position*/
+  double x1;
+  FILE *graph2;
+  graph2 = fopen("graph2.dat", "w");
+  
+  for(x1 = 0.0; x1 < 100.0; x1 = x1 + 1.0)
+    {
+      fprintf(graph2, "%.12lf %.12lf %.12lf\n", x1, potential(x1,0.0,0.0), ith_der_potential(x1,0.0,0.0));
+    }
+  
+  fclose(graph2);
+
+  /*GNUPLOT*/
+
+  FILE *plot;
+  plot = popen("gnuplot -persist","w");
+  fprintf(plot, "set terminal x11 0\n");
+  fprintf(plot, "set multiplot layout 1,3\n");
+  fprintf(plot, "plot 'graph.dat' using 1:2 not\n");
+  fprintf(plot, "plot 'graph.dat' using 1:3 not\n");
+  fprintf(plot, "plot 'graph.dat' using 1:4 not\n");
+  fprintf(plot, "unset multiplot\n");
+  fprintf(plot, "reset\n");
+  fprintf(plot, "set terminal x11 1\n");
+  fprintf(plot, "set multiplot layout 1,2\n");
+  fprintf(plot, "plot 'graph2.dat' using 1:2 not\n");
+  fprintf(plot, "plot 'graph2.dat' using 1:3 not\n");
+  fprintf(plot, "unset multiplot\n");
+  //fprintf(plot, "plot 'graph2.dat' using 1:4 not\n");
+
+  pclose(plot);
+  system("rm graph.dat");
+  system("rm graph2.dat");
+
+  
+
+  
 
   /*Pointer to file where solution of differential equation will be saved.*/
   //FILE *geodesic;
@@ -141,7 +191,7 @@ int main(void)
   //  }
 
   /** Releasing all used space in memory **/
-  fclose(geodesic); //Close file storing the results
+  //fclose(geodesic); //Close file storing the results
   gsl_spline_free(spline1);  //Free memory of spline object
   gsl_spline_free(spline2);
   gsl_interp_accel_free(acc1);  //Free memory of accel object
