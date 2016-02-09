@@ -15,6 +15,11 @@ geodesic_equations:
 	  $(CC) $(CFLAGS) $@.c -o $@.o
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
 
+minkowski:
+	  echo Estoy compilando $@.c
+	  $(CC) $(CFLAGS) $@.c -o $@.o
+	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
+
 clean:
 
 	rm -rf $(PROGRAM)
