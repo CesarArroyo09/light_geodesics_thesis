@@ -20,6 +20,11 @@ minkowski:
 	  $(CC) $(CFLAGS) $@.c -o $@.o
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
 
+newtonian_cartesian:
+	echo Estoy compilando $@.c
+	$(CC) $(CFLAGS) $@.c -o $@.o
+	$(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x	
+
 clean:
 
 	rm -rf $(PROGRAM)

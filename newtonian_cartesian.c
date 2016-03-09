@@ -9,13 +9,12 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #include <gsl/gsl_errno.h>          //GSL error management module
 #include <gsl/gsl_spline.h>         //GSL interpolation module
 
-#define A 50.0     //Distance parameter of the perturbations
+#define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
 #define M 50.0     //Mass of the perturbation
-#define C 299792.458  //Speed of light
+#define C 300000.0  //Speed of light
 #define NLINES 999 //Number of lines in frw.dat file
 #define DLAMBDA 0.001   //Geodesics parameter step
-
 
 /*Function for the gravitational potential to be used*/
 double potential(double x1, double x2, double x3)
@@ -48,17 +47,17 @@ double geodesic_equation_i(double p0, double pi, double pj1, double pj2, double 
   return f;
 }
 
-void euler1(double a, double aprime, double *eta, double *x1, double *x2, double *x3, double *p0, double *p1, double *p2, double *p3, double *lambda)
+void euler1(double *t, double *x1, double *x2, double *x3, double *p0, double *p1, double *p2, double *p3, double *lambda)
 {
   /*Increment in the variables of the differential equation we want to solve*/
   double dt, dx1, dx2, dx3, dp0, dp1, dp2, dp3;
 
   /*Calculation of the increments*/
   dt = *p0*DLAMBDA; dx1 = *p1*DLAMBDA; dx2 = *p2*DLAMBDA; dx3 = *p3*DLAMBDA;
-  dp0 = geodesic_equation_0(*p0, *p1, *p2, *p3, *eta, *x1, *x2, *x3)*DLAMBDA;
-  dp1 = geodesic_equation_i(*p0, *p1, *p2, *p3, *eta, *x1, *x2, *x3)*DLAMBDA;
-  dp2 = geodesic_equation_i(*p0, *p2, *p1, *p3, *eta, *x2, *x1, *x3)*DLAMBDA;
-  dp3 = geodesic_equation_i(*p0, *p3, *p2, *p1, *eta, *x3, *x2, *x1)*DLAMBDA;
+  dp0 = geodesic_equation_0(*p0, *p1, *p2, *p3, *t, *x1, *x2, *x3)*DLAMBDA;
+  dp1 = geodesic_equation_i(*p0, *p1, *p2, *p3, *t, *x1, *x2, *x3)*DLAMBDA;
+  dp2 = geodesic_equation_i(*p0, *p2, *p1, *p3, *t, *x2, *x1, *x3)*DLAMBDA;
+  dp3 = geodesic_equation_i(*p0, *p3, *p2, *p1, *t, *x3, *x2, *x1)*DLAMBDA;
 
   /*New values of the variables of the differential equation. Since we are using pointers, when called the routine the value of variable change.*/
   *t = *t + dt; *x1 = *x1 + dx1; *x2 = *x2 + dx2; *x3 = *x3 + dx3;
@@ -66,6 +65,18 @@ void euler1(double a, double aprime, double *eta, double *x1, double *x2, double
   
   /*Increment of parameter of geodesics*/
   *lambda = *lambda + DLAMBDA;
+}
+
+double g00(double x1, double x2, double x3)
+{
+  double g = 1.0 + 2*potential(x1,x2,x3)/(C*C);
+  return g;
+}
+
+double gii(double x1, double x2, double x3)
+{
+  double g = 1.0 - 2*potential(x1,x2,x3)/(C*C);
+  return g;
 }
 
 int main(void)
@@ -111,20 +122,21 @@ int main(void)
 
   
   /*Initial conditions*/
-  double t = 0.0, x1 = 500, x2 = 0.0, x3 = 0.0, p0 = 0, p1 = 0, p2 = 0, p3 = 0, lambda = 0.0;
+  double t = 0.0, x1 = 500.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-10, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, nu = 0.0;
+  p1 = -sqrt(g00(x1,x2,x3)/gii(x1,x2,x3))*p0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", lambda, t, x1, x2, x3, p0, p1, p2, p3);
+  fprintf(geodesic,"%.3lf %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n", lambda, t, x1, x2, x3, p0, p1, p2, p3);
 
   /*Solution of the differential equation*/
   for(i=0; i<1000; i++)
     {
       euler1(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
-      fprintf(geodesic, "%.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", lambda, t, x1, x2, x3, p0, p1, p2, p3);
+      fprintf(geodesic,"%.3lf %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n", lambda, t, x1, x2, x3, p0, p1, p2, p3);
     }
 
   /** Releasing all used space in memory **/
