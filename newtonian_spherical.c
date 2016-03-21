@@ -12,7 +12,7 @@ The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x
 #define G 43007.01     //Gravitational constant
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NLINES 99999 //Number of lines in frw.dat file
+#define NLINES 99 //Number of lines in frw.dat file
 #define DLAMBDA 0.00001   //Geodesics parameter step
 
 typedef long double mydbl;
@@ -74,6 +74,7 @@ void euler1(mydbl *x0, mydbl *r, mydbl *theta, mydbl *phi, mydbl *p0, mydbl *pr,
   dpr = geodesic_equation_r(*p0, *pr, *ptheta, *pphi, *r, *theta)*DLAMBDA;
   dptheta = geodesic_equation_theta(*pr, *ptheta, *pphi, *r, *theta)*DLAMBDA;
   dpphi = geodesic_equation_phi(*pr, *ptheta, *pphi, *r, *theta)*DLAMBDA;
+  printf("%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", dx0, dr, dtheta, dphi, dp0, dpr, dptheta, dpphi);
 
   /*New values of the variables of the differential equation. Since we are using pointers, when called the routine the value of variable change.*/
   *x0 = *x0 + dx0; *r = *r + dr; *theta = *theta + dtheta; *phi = *phi + dphi;
@@ -126,7 +127,7 @@ int main(void)
 
   
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = 500, theta = 0.0, phi = 0.0, p0 = 0.001, pr = -p0, ptheta = 0.0, pphi = 0.0, lambda = 0.0;
+  mydbl x0 = 0.0, r = 10.0, theta = 0.0, phi = 0.0, p0 = 0.001, pr = -p0, ptheta = 0.0, pphi = 0.0, lambda = 0.0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;

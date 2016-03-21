@@ -10,9 +10,9 @@ The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 
 #define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 0.0     //Mass of the perturbation
+#define M 50000.0     //Mass of the perturbation
 #define C 300000.0  //Speed of light
-#define NLINES 100000 //Number of lines in frw.dat file
+#define NLINES 150000 //Number of lines in frw.dat file
 #define DLAMBDA 0.000001   //Geodesics parameter step
 
 typedef long double mydbl;
@@ -48,17 +48,54 @@ mydbl geodesic_equation_i(mydbl p0, mydbl pi, mydbl pj1, mydbl pj2, mydbl x0, my
   return f;
 }
 
-void euler1(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl *p1, mydbl *p2, mydbl *p3, mydbl *lambda)
+void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl *p1, mydbl *p2, mydbl *p3, mydbl *lambda)
 {
   /*Increment in the variables of the differential equation we want to solve*/
   mydbl dx0, dx1, dx2, dx3, dp0, dp1, dp2, dp3;
 
+  /*dxi = (k1,i + 2*k2,j + 2*k3,j + k4,j)/6. In this sections the ki,j are declared with i=1,2,3,4.*/
+  mydbl k1x0, k1x1, k1x2, k1x3, k1p0, k1p1, k1p2, k1p3;
+  mydbl k2x0, k2x1, k2x2, k2x3, k2p0, k2p1, k2p2, k2p3;
+  mydbl k3x0, k3x1, k3x2, k3x3, k3p0, k3p1, k3p2, k3p3;
+  mydbl k4x0, k4x1, k4x2, k4x3, k4p0, k4p1, k4p2, k4p3;
+
+  /*This section calculates the k1 quantities*/
+  k1x0 = *p0*DLAMBDA; k1x1 = *p1*DLAMBDA; k1x2 = *p2*DLAMBDA; k3x0 = *p3*DLAMBDA;
+  k1p0 = DLAMBDA*geodesic_equation_0(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
+  k1p1 = geodesic_equation_i(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
+  k2p2 = geodesic_equation_i(*p0, *p2, *p1, *p3, *x0, *x2, *x1, *x3)*DLAMBDA;
+  k3p3 = geodesic_equation_i(*p0, *p3, *p2, *p1, *x0, *x3, *x2, *x1)*DLAMBDA;
+
+  /*This section calculates the k2 quantities*/
+  k2x0 = DLAMBDA*(*p0 + 0.5*k1x0); k2x1 = DLAMBDA*(*p1 + 0.5*k1x1); k2x2 = DLAMBDA*(*p2 + 0.5*k1x2); k2x3 = DLAMBDA*(*p3 + 0.5*k1x3);
+  k2p0 = DLAMBDA*geodesic_equation_0(*p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2, *x3 + 0.5*k1x3);
+  k2p1 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2, *x3 + 0.5*k1x3);
+  k2p2 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k1p0, *p2 + 0.5*k1p2, *p1 + 0.5*k1p1, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x2 + 0.5*k1x2, *x1 + 0.5*k1x1, *x3 + 0.5*k1x3);
+  k2p3 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k1p0, *p3 + 0.5*k1p3, *p2 + 0.5*k1p2, *p1 + 0.5*k1p1, *x0 + 0.5*k1x0, *x3 + 0.5*k1x3, *x2 + 0.5*k1x2, *x1 + 0.5*k1x1);
+  
+  /*This section calculates the k3 quantities*/
+  k3x0 = DLAMBDA*(*p0 + 0.5*k2x0); k3x1 = DLAMBDA*(*p1 + 0.5*k2x1); k3x2 = DLAMBDA*(*p2 + 0.5*k2x2); k3x3 = DLAMBDA*(*p3 + 0.5*k2x3);
+  k3p0 = DLAMBDA*geodesic_equation_0(*p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2, *x3 + 0.5*k2x3);
+  k3p1 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2, *x3 + 0.5*k2x3);
+  k3p2 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k2p0, *p2 + 0.5*k2p2, *p1 + 0.5*k2p1, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x2 + 0.5*k2x2, *x1 + 0.5*k2x1, *x3 + 0.5*k2x3);
+  k3p3 = DLAMBDA*geodesic_equation_i(*p0 + 0.5*k2p0, *p3 + 0.5*k2p3, *p2 + 0.5*k2p2, *p1 + 0.5*k2p1, *x0 + 0.5*k2x0, *x3 + 0.5*k2x3, *x2 + 0.5*k2x2, *x1 + 0.5*k2x1);
+
+  /*This section calculates the k4 quantities*/
+  k4x0 = DLAMBDA*(*p0 + k3x0); k4x1 = DLAMBDA*(*p1 + k3x1); k4x2 = DLAMBDA*(*p2 + k3x2); k4x3 = DLAMBDA*(*p3 + k3x3);
+  k4p0 = DLAMBDA*geodesic_equation_0(*p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2, *x3 + k3x3);
+  k4p1 = DLAMBDA*geodesic_equation_i(*p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2, *x3 + k3x3);
+  k4p2 = DLAMBDA*geodesic_equation_i(*p0 + k3p0, *p2 + k3p2, *p1 + k3p1, *p3 + k3p3, *x0 + k3x0, *x2 + k3x2, *x1 + k3x1, *x3 + k3x3);
+  k4p3 = DLAMBDA*geodesic_equation_i(*p0 + k3p0, *p3 + k3p3, *p2 + k3p2, *p1 + k3p1, *x0 + k3x0, *x3 + k3x3, *x2 + k3x2, *x1 + k3x1);
+
   /*Calculation of the increments*/
-  dx0 = *p0*DLAMBDA; dx1 = *p1*DLAMBDA; dx2 = *p2*DLAMBDA; dx3 = *p3*DLAMBDA;
-  dp0 = geodesic_equation_0(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
-  dp1 = geodesic_equation_i(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
-  dp2 = geodesic_equation_i(*p0, *p2, *p1, *p3, *x0, *x2, *x1, *x3)*DLAMBDA;
-  dp3 = geodesic_equation_i(*p0, *p3, *p2, *p1, *x0, *x3, *x2, *x1)*DLAMBDA;
+  dx0 = (k1x0 + 2.0*k2x0 + 2.0*k3x0 + k4x0)/6.0;
+  dx1 = (k1x1 + 2.0*k2x1 + 2.0*k3x1 + k4x1)/6.0;
+  dx2 = (k1x2 + 2.0*k2x2 + 2.0*k3x2 + k4x2)/6.0;
+  dx3 = (k1x3 + 2.0*k2x3 + 2.0*k3x3 + k4x3)/6.0;
+  dp0 = (k1p0 + 2.0*k2p0 + 2.0*k3p0 + k4p0)/6.0;
+  dp1 = (k1p1 + 2.0*k2p1 + 2.0*k3p1 + k4p1)/6.0;
+  dp2 = (k1p2 + 2.0*k2p2 + 2.0*k3p2 + k4p2)/6.0;
+  dp3 = (k1p3 + 2.0*k2p3 + 2.0*k3p3 + k4p3)/6.0;
 
   /*New values of the variables of the differential equation. Since we are using pointers, when called the routine the value of variable change.*/
   *x0 = *x0 + dx0; *x1 = *x1 + dx1; *x2 = *x2 + dx2; *x3 = *x3 + dx3;
@@ -123,7 +160,7 @@ int main(void)
 
   
   /*Initial conditions*/
-  mydbl t = 0.0, x1 = 0.0, x2 = 0.0, x3 = 0.0, p0 = 0.001, p1 = p0, p2 = 0.0, p3 = 0.0, lambda = 0.0, nu = 0.0;
+  mydbl t = 0.0, x1 = 50.0, x2 = 0.0, x3 = 0.0, p0 = 0.001, p1 = p0, p2 = 0.0, p3 = 0.0, lambda = 0.0, nu = 0.0;
   //p1 = -sqrtl(g00(x1,x2,x3)/gii(x1,x2,x3))*p0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
@@ -136,7 +173,7 @@ int main(void)
   /*Solution of the differential equation*/
   for(i=0; i<(1+NLINES); i++)
     {
-      euler1(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
+      runge_kutta_4(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
       fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3);
     }
 
