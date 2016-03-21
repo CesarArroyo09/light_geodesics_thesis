@@ -1,7 +1,8 @@
-/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime.
-This program solves the particular case for the Minkowski perturbed spacetime with metric: g_{ab} = {\eta}_{ab} + h_{ab}. Where h_{ab} i
+/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime in CARTESIAN coordinates.
+This program solves the particular case for the Minkowski perturbed spacetime with metric: $g_{ab} = {\eta}_{ab} + h_{ab}$. Where $h_{ab}$ corresponds to the perturbation in the Newtonian weak field limit. A Plummer potential with adequate parameters have been used to simulate the perturbation.
 The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$.
-Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
+Where $p^{\alpha}={\dot{x}}^{\alpha}$ and the indice $\alpha$ runs from 0 to 3.
+The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,18 +12,18 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define G 43007.01     //Gravitational constant
 #define M 0.0     //Mass of the perturbation
 #define C 300000.0  //Speed of light
-#define NLINES 999 //Number of lines in frw.dat file
+#define NLINES 100000 //Number of lines in frw.dat file
 #define DLAMBDA 0.000001   //Geodesics parameter step
 
 typedef long double mydbl;
 
-/*Function for the gravitational potential to be used*/
+/*Function for the gravitational potential used. Potential for Plummer model.*/
 mydbl potential(mydbl x1, mydbl x2, mydbl x3)
 {
   return -G*M/(sqrtl(A*A + x1*x1 + x2*x2 +x3*x3));
 }
 
-/*First partial derivative respect to the ith coordinate.
+/*First partial derivative of potential respect to the ith coordinate.
 First argument xi denotes the ith coordinate.
 The xj's denote the other coordinates. The order doesn't matter since they appear in the same way in the equation.*/
 mydbl ith_der_potential(mydbl xi, mydbl xj1, mydbl xj2)
@@ -30,17 +31,17 @@ mydbl ith_der_potential(mydbl xi, mydbl xj1, mydbl xj2)
   return G*M*xi/(powl(A*A+xi*xi+xj1*xj1+xj2*xj2, 1.5));
 }
 
-/*This is the function of the first differential equation for the geodesics.
-l^{dot} = f1(variables of the problem)*/
+/*Function of the 0th momentum component differential equation for the geodesics.
+${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl p1, mydbl p2, mydbl p3, mydbl x0, mydbl x1, mydbl x2, mydbl x3)
 {
   mydbl f = - p0*(p1*ith_der_potential(x1, x2, x3) + p2*ith_der_potential(x2, x1, x3) + p3*ith_der_potential(x3, x2, x1));
   return f;
 }
 
-/*Function for the ith differential equation for the geodesics, where i=1,2,3.
+/*Function for the ith momentum component differential equation for the geodesics, where i=1,2,3.
 xi is the ith coordinate, pi is the ith momentum.
-The other position and momentum quantities are denoted xj1, xj2, pj1 and pj2. These quantities appear in a symmetric way in the equation so in doesn't matter the order.*/
+The other position and momentum quantities are denoted xj1, xj2, pj1 and pj2. Quantities xj1 and xj2 appear in symmetric way in this function so order doesn't matter, the same way for pj1 and pj2. Nevertheless, when calling this function the position of xj1 respecto to the 'x' quantities in arguments should be the same that position of pj1 respect to the 'p' quantities in the argument.*/
 mydbl geodesic_equation_i(mydbl p0, mydbl pi, mydbl pj1, mydbl pj2, mydbl x0, mydbl xi, mydbl xj1, mydbl xj2)
 {
   mydbl f =  (1/powl(C,2)) * ( 2*pi * (pi*ith_der_potential(xi,xj1,xj2) + pj1*ith_der_potential(xj1,xi,xj2) + pj2*ith_der_potential(xj2,xj1,xi)) - ith_der_potential(xi,xj1,xj2) * (powl(p0,2) + powl(pi,2) + powl(pj1,2) + powl(pj2,2)) ) ;
@@ -133,7 +134,7 @@ int main(void)
   fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3);
 
   /*Solution of the differential equation*/
-  for(i=0; i<100000; i++)
+  for(i=0; i<(1+NLINES); i++)
     {
       euler1(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
       fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3);
