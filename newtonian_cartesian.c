@@ -11,7 +11,7 @@ The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 #define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
 #define M 50000.0     //Mass of the perturbation
-#define C 300000.0  //Speed of light
+#define C 299792.458  //Speed of light
 #define NLINES 150000 //Number of lines in frw.dat file
 #define DLAMBDA 0.000001   //Geodesics parameter step
 
@@ -61,7 +61,7 @@ void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl 
 
   /*This section calculates the k1 quantities*/
   k1x0 = *p0*DLAMBDA; k1x1 = *p1*DLAMBDA; k1x2 = *p2*DLAMBDA; k3x0 = *p3*DLAMBDA;
-  k1p0 = DLAMBDA*geodesic_equation_0(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
+  k1p0 = geodesic_equation_0(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
   k1p1 = geodesic_equation_i(*p0, *p1, *p2, *p3, *x0, *x1, *x2, *x3)*DLAMBDA;
   k2p2 = geodesic_equation_i(*p0, *p2, *p1, *p3, *x0, *x2, *x1, *x3)*DLAMBDA;
   k3p3 = geodesic_equation_i(*p0, *p3, *p2, *p1, *x0, *x3, *x2, *x1)*DLAMBDA;
