@@ -10,7 +10,7 @@ The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x
 
 #define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 0.0     //Mass of the perturbation
+#define M 50000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 150000 //Number of lines in frw.dat file
 #define DLAMBDA 0.00001   //Geodesics parameter step
