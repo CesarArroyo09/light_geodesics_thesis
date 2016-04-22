@@ -12,8 +12,8 @@ The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 #define G 43007.01     //Gravitational constant
 #define M 50000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NLINES 500000 //Number of lines in frw.dat file
-#define DLAMBDA 0.00001   //Geodesics parameter step
+#define NLINES 5000000 //Number of lines in frw.dat file
+#define DLAMBDA 0.01   //Geodesics parameter step
 
 typedef long double mydbl;
 
@@ -35,7 +35,7 @@ mydbl ith_der_potential(mydbl xi, mydbl xj1, mydbl xj2)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl p1, mydbl p2, mydbl p3, mydbl x0, mydbl x1, mydbl x2, mydbl x3)
 {
-  mydbl f = - p0*(p1*ith_der_potential(x1, x2, x3) + p2*ith_der_potential(x2, x1, x3) + p3*ith_der_potential(x3, x2, x1));
+  mydbl f = - p0*(1/(C*C))*(p1*ith_der_potential(x1, x2, x3) + p2*ith_der_potential(x2, x1, x3) + p3*ith_der_potential(x3, x2, x1));
   return f;
 }
 
@@ -117,6 +117,13 @@ mydbl energy_factor(mydbl x1, mydbl x2, mydbl x3)
   return g;
 }
 
+/*Violation of null geodesics condition.*/
+mydbl violation(mydbl x1, mydbl x2, mydbl x3, mydbl p0, mydbl p1)
+{
+  mydbl v = -(1.0+2.0*potential(x1,x2,x3)/(C*C))*p0*p0 + (1.0-2.0*potential(x1,x2,x3)/(C*C))*p1*p1;
+  return v;
+}
+
 int main(void)
 {
   int i;            //For array manipulation
@@ -160,23 +167,25 @@ int main(void)
 
   
   /*Initial conditions*/
-  mydbl t = 0.0, x1 = 10.0, x2 = 0.0, x3 = 0.0, p0 = 0.001, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy;
-  p1 = -condition_factor(x1,x2,x3)*p0;
-  energy = C*energy_factor(x1,x2,x3)*p0;
+  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-3, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v;
+  p1 = condition_factor(x1,x2,x3)*p0;
+  energy = -C*energy_factor(x1,x2,x3)*p0;
+  v = violation(x1,x2,x3,p0,p1);
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy);
+  fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v);
 
   /*Solution of the differential equation*/
   for(i=0; i<(1+NLINES); i++)
     {
       runge_kutta_4(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
-      energy = C*energy_factor(x1,x2,x3)*p0;
-      fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy);
+      energy = -C*energy_factor(x1,x2,x3)*p0;
+      v = violation(x1,x2,x3,p0,p1);
+      fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v);
     }
 
   /** Releasing all used space in memory **/
