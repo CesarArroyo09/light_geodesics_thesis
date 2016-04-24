@@ -8,11 +8,11 @@ The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 #include <stdio.h>
 #include <math.h>
 
-#define A 1.0     //Distance parameter of the perturbations
+#define A 2.5     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 50000.0     //Mass of the perturbation
+#define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NLINES 5000000 //Number of lines in frw.dat file
+#define NLINES 4000000 //Number of lines in frw.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
 typedef long double mydbl;
@@ -35,7 +35,7 @@ mydbl ith_der_potential(mydbl xi, mydbl xj1, mydbl xj2)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl p1, mydbl p2, mydbl p3, mydbl x0, mydbl x1, mydbl x2, mydbl x3)
 {
-  mydbl f = - p0*(1/(C*C))*(p1*ith_der_potential(x1, x2, x3) + p2*ith_der_potential(x2, x1, x3) + p3*ith_der_potential(x3, x2, x1));
+  mydbl f = -2.0*p0*(1/(C*C))*(p1*ith_der_potential(x1, x2, x3) + p2*ith_der_potential(x2, x1, x3) + p3*ith_der_potential(x3, x2, x1));
   return f;
 }
 
@@ -44,7 +44,7 @@ xi is the ith coordinate, pi is the ith momentum.
 The other position and momentum quantities are denoted xj1, xj2, pj1 and pj2. Quantities xj1 and xj2 appear in symmetric way in this function so order doesn't matter, the same way for pj1 and pj2. Nevertheless, when calling this function the position of xj1 respecto to the 'x' quantities in arguments should be the same that position of pj1 respect to the 'p' quantities in the argument.*/
 mydbl geodesic_equation_i(mydbl p0, mydbl pi, mydbl pj1, mydbl pj2, mydbl x0, mydbl xi, mydbl xj1, mydbl xj2)
 {
-  mydbl f =  (1/powl(C,2)) * ( 2*pi * (pi*ith_der_potential(xi,xj1,xj2) + pj1*ith_der_potential(xj1,xi,xj2) + pj2*ith_der_potential(xj2,xj1,xi)) - ith_der_potential(xi,xj1,xj2) * (p0*p0 + pi*pi + pj1*pj1 + pj2*pj2) ) ;
+  mydbl f =  (1/powl(C,2))*( 2*pi * (pi*ith_der_potential(xi,xj1,xj2) + pj1*ith_der_potential(xj1,xi,xj2) + pj2*ith_der_potential(xj2,xj1,xi)) - ith_der_potential(xi,xj1,xj2) * (p0*p0 + pi*pi + pj1*pj1 + pj2*pj2) ) ;
   return f;
 }
 
@@ -167,25 +167,27 @@ int main(void)
 
   
   /*Initial conditions*/
-  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-3, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v;
+  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-3, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v, difft, energy1;
   p1 = condition_factor(x1,x2,x3)*p0;
-  energy = -C*energy_factor(x1,x2,x3)*p0;
+  energy1 = C*energy_factor(x1,x2,x3)*p0;
   v = violation(x1,x2,x3,p0,p1);
+  difft = (energy1 - energy1)/energy1;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v);
+  fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy1, v, difft);
 
   /*Solution of the differential equation*/
-  for(i=0; i<(1+NLINES); i++)
+  for(i=0; i<(NLINES); i++)
     {
       runge_kutta_4(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
-      energy = -C*energy_factor(x1,x2,x3)*p0;
+      energy = C*energy_factor(x1,x2,x3)*p0;
       v = violation(x1,x2,x3,p0,p1);
-      fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v);
+      difft = (energy - energy1)/energy1;
+      fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v, difft);
     }
 
   /** Releasing all used space in memory **/
