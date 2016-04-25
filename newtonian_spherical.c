@@ -10,10 +10,10 @@ The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x
 
 #define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 50000.0     //Mass of the perturbation
+#define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NLINES 150000 //Number of lines in frw.dat file
-#define DLAMBDA 0.00001   //Geodesics parameter step
+#define NLINES 1500000 //Number of lines in frw.dat file
+#define DLAMBDA 0.05   //Geodesics parameter step
 
 typedef long double mydbl;
 
@@ -121,25 +121,53 @@ void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl 
 
 }
 
+/*To set the initial value of pr, it must hold $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.
+This factor multiplies p0 to guarantee that p1 fulfill the null geodesic condition.*/
+mydbl condition_factor(mydbl r)
+{
+  return 1.0+2.0*potential(r)/(C*C);
+}
+
+/*$cp^{0}$ multiplied by this factor allows to obtain the energy for a local inertial observer in this spacetime.*/
+mydbl energy_factor(mydbl r)
+{
+  mydbl g = 1.0 + potential(r)/(C*C);
+  return g;
+}
+
+/*Violation of null geodesics condition $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.*/
+mydbl violation(mydbl r, mydbl theta, mydbl phi, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi)
+{
+  mydbl f = -(1.0+2.0*potential(r)/(C*C))*p0*p0 + (1.0-2.0*potential(r)/(C*C))*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
+  return f;
+}
+
 int main(void)
 {
   int i;            //For array manipulation
   
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = 10.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr = -p0, ptheta = 0.0, pphi = 0.0, lambda = 0.0;
+  mydbl x0 = 0.0, r = -25.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
+  pr = condition_factor(r)*p0;
+  energy1 = C*energy_factor(r)*p0;
+  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
+  difft = (energy1 - energy1)/energy1;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi);
+  fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft);
 
   /*Solution of the differential equation*/
   for(i=0; i<(1+ NLINES); i++)
     {
       runge_kutta_4(&x0, &r, &theta, &phi, &p0, &pr, &ptheta, &pphi, &lambda);
-      fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi);
+      energy = C*energy_factor(r)*p0;
+      v = violation(r, theta, phi, p0, pr, ptheta, pphi);
+      difft = (energy - energy1)/energy1;
+      fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft);
     }
 
   /** Releasing all used space in memory **/

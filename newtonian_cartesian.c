@@ -105,22 +105,25 @@ void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl 
   *lambda = *lambda + DLAMBDA;
 }
 
+/*To set the initial value of p1, it must hold $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.
+This factor multiplies p0 to guarantee that p1 fulfill the null geodesic condition.*/
 mydbl condition_factor(mydbl x1, mydbl x2, mydbl x3)
 {
   mydbl g = 1.0 + 2.0*potential(x1,x2,x3)/(C*C);
   return g;
 }
 
+/*$cp^{0}$ multiplied by this factor allows to obtain the energy for a local inertial observer in this spacetime.*/
 mydbl energy_factor(mydbl x1, mydbl x2, mydbl x3)
 {
   mydbl g = 1.0 + potential(x1,x2,x3)/(C*C);
   return g;
 }
 
-/*Violation of null geodesics condition.*/
-mydbl violation(mydbl x1, mydbl x2, mydbl x3, mydbl p0, mydbl p1)
+/*Violation of null geodesics condition $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.*/
+mydbl violation(mydbl x1, mydbl x2, mydbl x3, mydbl p0, mydbl p1, mydbl p2, mydbl p3)
 {
-  mydbl v = -(1.0+2.0*potential(x1,x2,x3)/(C*C))*p0*p0 + (1.0-2.0*potential(x1,x2,x3)/(C*C))*p1*p1;
+  mydbl v = -(1.0+2.0*potential(x1,x2,x3)/(C*C))*p0*p0 + (1.0-2.0*potential(x1,x2,x3)/(C*C))*(p1*p1 + p2*p2 + p3*p3);
   return v;
 }
 
@@ -129,10 +132,10 @@ int main(void)
   int i;            //For array manipulation
 
   /*Initial conditions*/
-  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-1, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v, difft, energy1;
+  mydbl t = 0.0, x1 = -40.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-1, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v, difft, energy1;
   p1 = condition_factor(x1,x2,x3)*p0;
   energy1 = C*energy_factor(x1,x2,x3)*p0;
-  v = violation(x1,x2,x3,p0,p1);
+  v = violation(x1,x2,x3,p0,p1,p2,p3);
   difft = (energy1 - energy1)/energy1;
 
   /*Pointer to file where solution of differential equation will be saved.*/
@@ -147,7 +150,7 @@ int main(void)
     {
       runge_kutta_4(&t, &x1, &x2, &x3, &p0, &p1, &p2, &p3, &lambda);
       energy = C*energy_factor(x1,x2,x3)*p0;
-      v = violation(x1,x2,x3,p0,p1);
+      v = violation(x1,x2,x3,p0,p1,p2,p3);
       difft = (energy - energy1)/energy1;
       fprintf(geodesic,"%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, t, x1, x2, x3, p0, p1, p2, p3, energy, v, difft);
     }
