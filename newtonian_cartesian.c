@@ -8,12 +8,12 @@ The coordinates for the photon's geodesics are: (ct,x,y,z) = (x0,x1,x2,x3).*/
 #include <stdio.h>
 #include <math.h>
 
-#define A 2.5     //Distance parameter of the perturbations
+#define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 4000000 //Number of lines in frw.dat file
-#define DLAMBDA 0.01   //Geodesics parameter step
+#define DLAMBDA 0.001   //Geodesics parameter step
 
 typedef long double mydbl;
 
@@ -128,46 +128,8 @@ int main(void)
 {
   int i;            //For array manipulation
 
-  /* /\*Graphication of functions depending on position*\/ */
-  /* mydbl x1; */
-  /* FILE *graph2; */
-  /* graph2 = fopen("graph2.dat", "w"); */
-  
-  /* for(x1 = 0.0; x1 < 100.0; x1 = x1 + 1.0) */
-  /*   { */
-  /*     fprintf(graph2, "%.12lf %.12lf %.12lf\n", x1, potential(x1,0.0,0.0), ith_der_potential(x1,0.0,0.0)); */
-  /*   } */
-  
-  /* fclose(graph2); */
-
-  /* /\*GNUPLOT*\/ */
-
-  /* FILE *plot; */
-  /* plot = popen("gnuplot -persist","w"); */
-  /* fprintf(plot, "set terminal x11 0\n"); */
-  /* fprintf(plot, "set multiplot layout 1,3\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:4 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* fprintf(plot, "reset\n"); */
-  /* fprintf(plot, "set terminal x11 1\n"); */
-  /* fprintf(plot, "set multiplot layout 1,2\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* //fprintf(plot, "plot 'graph2.dat' using 1:4 not\n"); */
-
-  /* pclose(plot); */
-  /* system("rm graph.dat"); */
-  /* system("rm graph2.dat"); */
-  
-  
-  /************************************************************************************/
-
-  
   /*Initial conditions*/
-  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-3, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v, difft, energy1;
+  mydbl t = 0.0, x1 = -25.0, x2 = 0.0, x3 = 0.0, p0 = 1.0e-1, p1, p2 = 0.0, p3 = 0.0, lambda = 0.0, energy, v, difft, energy1;
   p1 = condition_factor(x1,x2,x3)*p0;
   energy1 = C*energy_factor(x1,x2,x3)*p0;
   v = violation(x1,x2,x3,p0,p1);

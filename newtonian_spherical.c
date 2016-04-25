@@ -33,7 +33,7 @@ mydbl der_potential(mydbl r)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 {
-  mydbl f = -(2/powl(C,2))*der_potential(r)*p0*pr;
+  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr;
   return f;
 }
 
@@ -41,7 +41,7 @@ mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f =  r*(powl(ptheta,2) + powl(sinl(theta),2)*powl(pphi,2)) - (der_potential(r)/powl(C,2))*(powl(p0,2) -powl(pr,2) + powl(r,2)*(powl(ptheta,2) + powl(sinl(theta),2)*powl(pphi,2)));
+  mydbl f =  r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(p0*p0 - pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)));
   return f;
 }
 
@@ -49,7 +49,7 @@ mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r,
 ${p2}^{dot} = f2(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 0.5*sinl(2*theta)*pphi*pphi - 2*(1/r - der_potential(r)/powl(C,2))*pr*ptheta;
+  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi - 2.0*(der_potential(r)/powl(C,2.0) - 1/r)*pr*ptheta;
   return f;
 }
 
@@ -57,7 +57,7 @@ mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl
 ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 2*(1/r - der_potential(r)/powl(C,2))*pr*pphi - 2*(1/tanl(theta))*ptheta*pphi;
+  mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2*(1/tanl(theta))*ptheta*pphi;
   return f;
 }
 
@@ -124,47 +124,9 @@ void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl 
 int main(void)
 {
   int i;            //For array manipulation
-
-  /* /\*Graphication of functions depending on position*\/ */
-  /* double x1; */
-  /* FILE *graph2; */
-  /* graph2 = fopen("graph2.dat", "w"); */
-  
-  /* for(x1 = 0.0; x1 < 100.0; x1 = x1 + 1.0) */
-  /*   { */
-  /*     fprintf(graph2, "%.12lf %.12lf %.12lf\n", x1, potential(x1,0.0,0.0), ith_der_potential(x1,0.0,0.0)); */
-  /*   } */
-  
-  /* fclose(graph2); */
-
-  /* /\*GNUPLOT*\/ */
-
-  /* FILE *plot; */
-  /* plot = popen("gnuplot -persist","w"); */
-  /* fprintf(plot, "set terminal x11 0\n"); */
-  /* fprintf(plot, "set multiplot layout 1,3\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:4 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* fprintf(plot, "reset\n"); */
-  /* fprintf(plot, "set terminal x11 1\n"); */
-  /* fprintf(plot, "set multiplot layout 1,2\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* //fprintf(plot, "plot 'graph2.dat' using 1:4 not\n"); */
-
-  /* pclose(plot); */
-  /* system("rm graph.dat"); */
-  /* system("rm graph2.dat"); */
-  
-  
-  /************************************************************************************/
-
   
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = 10.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 0.001, pr = -p0, ptheta = 0.0, pphi = 0.0, lambda = 0.0;
+  mydbl x0 = 0.0, r = 10.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr = -p0, ptheta = 0.0, pphi = 0.0, lambda = 0.0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
