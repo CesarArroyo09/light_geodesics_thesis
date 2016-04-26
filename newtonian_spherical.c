@@ -57,7 +57,7 @@ mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl
 ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2*(1/tanl(theta))*ptheta*pphi;
+  mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi;
   return f;
 }
 
