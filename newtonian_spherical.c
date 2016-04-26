@@ -20,7 +20,7 @@ typedef long double mydbl;
 /*Function for the gravitational potential to be used. Potential for Plummer model.*/
 mydbl potential(mydbl r)
 {
-  return -G*M/(sqrt(A*A + r*r));
+  return -G*M/(sqrtl(A*A + r*r));
 }
 
 /*Derivative of potential respecto to radial coordinate.*/

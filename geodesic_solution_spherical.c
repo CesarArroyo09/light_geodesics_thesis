@@ -8,11 +8,14 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #include <gsl/gsl_errno.h>          //GSL error management module
 #include <gsl/gsl_spline.h>         //GSL interpolation module
 
-#define A 50.0     //Distance parameter of the perturbations
+#define A 1.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 50.0     //Mass of the perturbation
-#define NLINES 999 //Number of lines in frw.dat file
+#define M 15000.0     //Mass of the perturbation
+#define C 299792.458  //Speed of light
+#define NLINES 1500000 //Number of lines in frw.dat file
 #define DLAMBDA 0.001   //Geodesics parameter step
+
+typedef long double mydbl;
 
 /*Interpolation of scale factor at time eta.
 Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of conformal time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/

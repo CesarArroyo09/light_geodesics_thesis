@@ -11,7 +11,7 @@ cosmic_time   conformal_fime   scale_factor   cosmic_time_der_scale_factor*/
 
 
 #define NLINES 11
-#define H0 1.0          //Hubble paramater
+#define H0 0.1          //Hubble paramater
 #define OMEGAMAT 0.3    //Omega matter
 #define OMEGALAM 0.7    //Omega lambda
 
