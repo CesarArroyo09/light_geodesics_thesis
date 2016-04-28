@@ -12,7 +12,8 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define G 43007.01     //Gravitational constant
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NLINES 4000000 //Number of lines in geodesic_solution.dat file
+#define NLINES 100000 //Number of lines in geodesic_solution.dat file
+#define NSTEPS 1000000 //Number of steps for solving geodesics
 #define NLINESFRW 999 //Number of lines in frw.dat file
 #define DLAMBDA 1.0   //Geodesics parameter step
 
@@ -52,9 +53,9 @@ mydbl der_potential(mydbl r)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
-  double t = (double)(x0/C);
-  mydbl a = interp_scale_factor(spline1, t, acc1);
-  mydbl adot = interp_der_scale_factor(spline2, t, acc2);
+  double t = (double)(1.0*x0/C);
+  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
   mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr - (1.0 - 4.0*potential(r)/(C*C))*((a*adot)/C)*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
   return f;
 }
@@ -63,9 +64,9 @@ mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
-  double t = (double)(x0/C);
-  mydbl a = (mydbl)interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl)interp_der_scale_factor(spline2, t, acc2);
+  double t = (double)(1.0*x0/C);
+  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
   mydbl f = - (2.0*adot*p0*pr)/(C*a) - (der_potential(r)*p0*p0)/(a*a*C*C) + r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(-pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)));
   return f;
 }
@@ -74,9 +75,9 @@ mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
 ${p2}^{dot} = f2(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_theta(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
-  double t = (double)(x0/C);
-  mydbl a = (mydbl)interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl)interp_der_scale_factor(spline2, t, acc2);
+  double t = (double)(1.0*x0/C);
+  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
   mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*(der_potential(r)/powl(C,2.0) - 1/r)*pr*ptheta - (2.0*adot*p0*ptheta)/(C*a);
   return f;
 }
@@ -85,9 +86,9 @@ mydbl geodesic_equation_theta(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_s
 ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
-  double t = (double)(x0/C);
-  mydbl a = (mydbl)interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl)interp_der_scale_factor(spline2, t, acc2);
+  double t = (double)(1.0*x0/C);
+  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
   mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi - (2.0*adot*p0*pphi)/(a*C);
   return f;
 }
@@ -210,7 +211,7 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -3500.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
+  mydbl ti = 7.0 ,x0, r = -500.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
   x0 = C*ti;
   pr = condition_factor(r)*p0;
   energy1 = C*energy_factor(r)*p0;
@@ -222,16 +223,19 @@ int main(void)
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft);
+  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft);
 
   /*Solution of the differential equation*/
-  for(i=0; i<(1+ NLINES); i++)
+  for(i=0; i<(1+ NSTEPS); i++)
     {
       runge_kutta_4(spline1, acc1, spline2, acc2, &x0, &r, &theta, &phi, &p0, &pr, &ptheta, &pphi, &lambda);
-      energy = C*energy_factor(r)*p0;
-      v = violation(r, theta, phi, p0, pr, ptheta, pphi);
-      difft = (energy - energy1)/energy1;
-      fprintf(geodesic, "%.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf %.18Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft);
+      if((i%(NSTEPS/NLINES)) == 0)
+	{
+	  energy = C*energy_factor(r)*p0;
+	  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
+	  difft = (energy - energy1)/energy1;
+	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft);
+	} 
     }
 
   /************************************************************************************/
