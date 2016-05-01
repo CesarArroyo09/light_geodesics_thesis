@@ -1,6 +1,6 @@
 #!/bin/bash
 
 make clean
-make newtonian_cartesian
+make geodesic_solution_spherical
 sleep 3
-./newtonian_cartesian.x
+./geodesic_solution_spherical.x

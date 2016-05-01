@@ -13,9 +13,9 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 1000000 //Number of steps for solving geodesics
+#define NSTEPS 20000000 //Number of steps for solving geodesics
 #define NLINESFRW 999 //Number of lines in frw.dat file
-#define DLAMBDA 1.0   //Geodesics parameter step
+#define DLAMBDA 0.1   //Geodesics parameter step
 
 typedef long double mydbl;
 
@@ -211,19 +211,22 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -500.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
+  mydbl ti = 7.0 ,x0, r = -1000.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
+  double difftfrw, aem, aobs;
   x0 = C*ti;
   pr = condition_factor(r)*p0;
   energy1 = C*energy_factor(r)*p0;
   v = violation(r, theta, phi, p0, pr, ptheta, pphi);
   difft = (energy1 - energy1)/energy1;
+  aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+  difftfrw = (aem/aem) - 1.0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft);
+  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12f\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw);
 
   /*Solution of the differential equation*/
   for(i=0; i<(1+ NSTEPS); i++)
@@ -234,60 +237,14 @@ int main(void)
 	  energy = C*energy_factor(r)*p0;
 	  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
 	  difft = (energy - energy1)/energy1;
-	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft);
+	  ti = x0/C;
+	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+	  difftfrw = (aem/aobs) - 1.0;
+	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12f\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw);
 	} 
     }
 
   /************************************************************************************/
-
-  /* FILE *graph; */
-  /* graph = fopen("graph.dat","w"); */
-
-  /* /\*Graphication of functions depending on time*\/ */
-  /* for(eta = 0.12; eta <= 3.29; eta = eta + 0.01) */
-  /*   { */
-  /*     double a = interp_scale_factor(spline1, eta, acc1); */
-  /*     double aprime = interp_der_scale_factor(spline2, eta, acc2); */
-  /*     fprintf(graph, "%.12lf %.12lf %.12lf %.12lf\n", eta, a, aprime, aprime/a); */
-  /*   } */
-
-  /* fclose(graph); */
-
-  /* /\*Graphication of functions depending on position*\/ */
-  /* double x1; */
-  /* FILE *graph2; */
-  /* graph2 = fopen("graph2.dat", "w"); */
-  
-  /* for(x1 = 0.0; x1 < 100.0; x1 = x1 + 1.0) */
-  /*   { */
-  /*     fprintf(graph2, "%.12lf %.12lf %.12lf\n", x1, potential(x1,0.0,0.0), ith_der_potential(x1,0.0,0.0)); */
-  /*   } */
-  
-  /* fclose(graph2); */
-
-  /* /\*GNUPLOT*\/ */
-
-  /* FILE *plot; */
-  /* plot = popen("gnuplot -persist","w"); */
-  /* fprintf(plot, "set terminal x11 0\n"); */
-  /* fprintf(plot, "set multiplot layout 1,3\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "plot 'graph.dat' using 1:4 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* fprintf(plot, "reset\n"); */
-  /* fprintf(plot, "set terminal x11 1\n"); */
-  /* fprintf(plot, "set multiplot layout 1,2\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:2 not\n"); */
-  /* fprintf(plot, "plot 'graph2.dat' using 1:3 not\n"); */
-  /* fprintf(plot, "unset multiplot\n"); */
-  /* //fprintf(plot, "plot 'graph2.dat' using 1:4 not\n"); */
-
-  /* pclose(plot); */
-  /* system("rm graph.dat"); */
-  /* system("rm graph2.dat"); */
-
-  
 
   /*** Releasing all used space in memory ***/
   fclose(geodesic); //Close file storing the results
