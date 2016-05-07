@@ -1,6 +1,11 @@
 #emacs
 *~
 
+#Images
+*.jpeg
+*.jpg
+*.png
+
 #Data files
 *.dat
 

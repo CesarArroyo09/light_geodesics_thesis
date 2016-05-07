@@ -10,7 +10,7 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 
 #define A 10.0     //Distance parameter of the perturbations
 #define G 43007.01     //Gravitational constant
-#define M 15000.0     //Mass of the perturbation
+#define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define NSTEPS 20000000 //Number of steps for solving geodesics
@@ -154,9 +154,9 @@ void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spli
 
 /*To set the initial value of pr, it must hold $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.
 This factor multiplies p0 to guarantee that p1 fulfill the null geodesic condition.*/
-mydbl condition_factor(mydbl r)
+mydbl condition_factor(mydbl r, double a)
 {
-  return 1.0+2.0*potential(r)/(C*C);
+  return (1/a)*(1.0+2.0*potential(r)/(C*C));
 }
 
 /*$cp^{0}$ multiplied by this factor allows to obtain the energy for a local inertial observer in this spacetime.*/
@@ -167,9 +167,9 @@ mydbl energy_factor(mydbl r)
 }
 
 /*Violation of null geodesics condition $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.*/
-mydbl violation(mydbl r, mydbl theta, mydbl phi, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi)
+mydbl violation(mydbl r, mydbl theta, mydbl phi, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, double a)
 {
-  mydbl f = -(1.0+2.0*potential(r)/(C*C))*p0*p0 + (1.0-2.0*potential(r)/(C*C))*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
+  mydbl f = -(1.0+2.0*potential(r)/(C*C))*p0*p0 + a*a*(1.0-2.0*potential(r)/(C*C))*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
   return f;
 }
 
@@ -214,11 +214,11 @@ int main(void)
   mydbl ti = 7.0 ,x0, r = -1000.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
   double difftfrw, aem, aobs;
   x0 = C*ti;
-  pr = condition_factor(r)*p0;
-  energy1 = C*energy_factor(r)*p0;
-  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
-  difft = (energy1 - energy1)/energy1;
   aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+  pr = condition_factor(r, aem)*p0;
+  energy1 = C*energy_factor(r)*p0;
+  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aem);
+  difft = (energy1 - energy1)/energy1;
   difftfrw = (aem/aem) - 1.0;
 
   /*Pointer to file where solution of differential equation will be saved.*/
@@ -235,10 +235,10 @@ int main(void)
       if((i%(NSTEPS/NLINES)) == 0)
 	{
 	  energy = C*energy_factor(r)*p0;
-	  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
 	  difft = (energy - energy1)/energy1;
 	  ti = x0/C;
 	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+	  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aobs);
 	  difftfrw = (aem/aobs) - 1.0;
 	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12f\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw);
 	} 
