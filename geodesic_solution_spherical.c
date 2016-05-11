@@ -14,8 +14,8 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define NSTEPS 20000000 //Number of steps for solving geodesics
-#define NLINESFRW 999 //Number of lines in frw.dat file
-#define DLAMBDA 0.1   //Geodesics parameter step
+#define NLINESFRW 10000 //Number of lines in frw.dat file
+#define DLAMBDA 0.01   //Geodesics parameter step
 
 typedef long double mydbl;
 
@@ -211,7 +211,7 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -1000.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft;
+  mydbl ti = 7.0 ,x0, r = -1000.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft, difference;
   double difftfrw, aem, aobs;
   x0 = C*ti;
   aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
@@ -220,13 +220,15 @@ int main(void)
   v = violation(r, theta, phi, p0, pr, ptheta, pphi, aem);
   difft = (energy1 - energy1)/energy1;
   difftfrw = (aem/aem) - 1.0;
+  difference = difft - difftfrw;
+  
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12f\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw);
+  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %16.8Le %.12Lf %.12f %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw, difference);
 
   /*Solution of the differential equation*/
   for(i=0; i<(1+ NSTEPS); i++)
@@ -240,7 +242,8 @@ int main(void)
 	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
 	  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aobs);
 	  difftfrw = (aem/aobs) - 1.0;
-	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12f\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw);
+	  difference = difft - difftfrw;
+	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %16.8Le %.12Lf %.12f %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw, difference);
 	} 
     }
 

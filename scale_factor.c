@@ -97,7 +97,7 @@ int main (void)
   w1 = gsl_integration_workspace_alloc(limit);
   w2 = gsl_integration_workspace_alloc(limit);
 
-  for(b = 0.001;b <= 1.0;b += 0.001)
+  for(b = 0.0001;b <= 1.0;b += 0.0001)
     {
       /*Numerical integration of functions*/
       gsl_integration_qags(&Fcosmic, a, b, 0, epsrel, limit, w1, &result1, &error1);
