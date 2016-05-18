@@ -13,9 +13,9 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 20000000 //Number of steps for solving geodesics
-#define NLINESFRW 10000 //Number of lines in frw.dat file
-#define DLAMBDA 0.01   //Geodesics parameter step
+#define NSTEPS 200000000 //Number of steps for solving geodesics
+#define NLINESFRW 9999 //Number of lines in frw.dat file
+#define DLAMBDA 0.001   //Geodesics parameter step
 
 typedef long double mydbl;
 
