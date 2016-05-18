@@ -230,11 +230,13 @@ int main(void)
   /*Write line of initial values in file*/
   fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %16.8Le %.12Lf %.12f %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw, difference);
 
+  long long int ii;
+
   /*Solution of the differential equation*/
-  for(i=0; i<(1+ NSTEPS); i++)
+  for(ii=0; ii<(1+ NSTEPS); ii++)
     {
       runge_kutta_4(spline1, acc1, spline2, acc2, &x0, &r, &theta, &phi, &p0, &pr, &ptheta, &pphi, &lambda);
-      if((i%(NSTEPS/NLINES)) == 0)
+      if((ii%(NSTEPS/NLINES)) == 0)
 	{
 	  energy = C*energy_factor(r)*p0;
 	  difft = (energy - energy1)/energy1;
@@ -255,4 +257,12 @@ int main(void)
   gsl_spline_free(spline2);
   gsl_interp_accel_free(acc1);  //Free memory of accel object
   gsl_interp_accel_free(acc2);
+
+  /*TAREAS
+    Arreglar loop (long int).
+   Hacer condicion inicial exacta.
+  Correr con e-05 y comparar con el anterior.
+  Crear branch y poner terminos que se eliminario por ser de segundo orden
+  Correr nuevamente con e-05
+  Poner perturbacion y correr de nuevo*/
 }
