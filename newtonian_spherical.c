@@ -34,7 +34,7 @@ mydbl der_potential(mydbl r)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 {
-  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr;
+  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C));
   return f;
 }
 
@@ -42,7 +42,7 @@ mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f =  r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(p0*p0 - pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)));
+  mydbl f =  r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(p0*p0 - pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)))/(1.0 - 2.0*potential(r)/(C*C));
   return f;
 }
 
@@ -50,7 +50,7 @@ mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r,
 ${p2}^{dot} = f2(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi - 2.0*(der_potential(r)/powl(C,2.0) - 1/r)*pr*ptheta;
+  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*((der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*ptheta;
   return f;
 }
 
@@ -58,7 +58,7 @@ mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl
 ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi;
+  mydbl f = 2.0*((der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi;
   return f;
 }
 
