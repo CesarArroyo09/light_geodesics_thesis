@@ -1,6 +1,9 @@
 #emacs
 *~
 
+#tar&zips
+*.tar.gz
+
 #Images
 *.jpeg
 *.jpg
