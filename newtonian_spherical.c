@@ -12,7 +12,7 @@ The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x
 #define G 43007.01     //Gravitational constant
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NSTEPS 5000000 //Number of steps for solving geodesics
+#define NSTEPS 40000000 //Number of steps for solving geodesics
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -175,7 +175,7 @@ int main(void)
 	  v = violation(r, theta, phi, p0, pr, ptheta, pphi);
 	  difft = (energy - energy1)/energy1;
 	  difference = difft - difftbackground;
-	  fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft);
+	  fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftbackground, difference);
 	}
     }
 
