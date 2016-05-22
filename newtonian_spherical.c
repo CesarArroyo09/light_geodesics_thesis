@@ -42,7 +42,7 @@ mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f =  r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(p0*p0 - pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)))/(1.0 - 2.0*potential(r)/(C*C));
+  mydbl f =  r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(p0*p0 - pr*pr + powl(r,2.0)*(ptheta*ptheta + powl(sinl(theta)*pphi,2.0)))/(1.0 - 2.0*potential(r)/(C*C));
   return f;
 }
 
@@ -50,7 +50,7 @@ mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl r,
 ${p2}^{dot} = f2(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*((der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*ptheta;
+  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*( (der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r )*pr*ptheta;
   return f;
 }
 
@@ -58,11 +58,11 @@ mydbl geodesic_equation_theta(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl
 ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(mydbl pr, mydbl ptheta, mydbl pphi, mydbl r, mydbl theta)
 {
-  mydbl f = 2.0*((der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi;
+  mydbl f = 2.0*( (der_potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r )*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi;
   return f;
 }
 
-/*Function for solving the geodesics differential equations using Euler's method.
+/*Function for solving the geodesics differential equations using 4th order Runge-Kutta method.
 Arguments are pointer so variables in that memory addresses are changed every time this function is called.*/
 void runge_kutta_4(mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl *p1, mydbl *p2, mydbl *p3, mydbl *lambda)
 {
