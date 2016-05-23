@@ -1,6 +1,8 @@
-/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime.
-The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$.
-Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
+/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime in SPHERICAL coordinates.
+This program solves the particular case for flat FRW perturbed spacetime with metric: $g_{ab} = {[g]}_{ab} + h_{ab}$. Where ${[g]}_{ab}$ corresponds to the flat FRW metric and $h_{ab}$ corresponds to the perturbation in the conformal Newtonian gauge. A Plummer potential with adequate parameters have been used to simulate the perturbation.
+The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$ and the indice $\alpha$ runs from 0 to 3.
+Where $p^{\alpha}={\dot{x}}^{\alpha}$.
+The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x3).*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,14 +15,14 @@ Where $p^{\alpha}={\dot{x}}^{\alpha}$*/
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 400000000 //Number of steps for solving geodesics
+#define NSTEPS 30000000 //Number of steps for solving geodesics
 #define NLINESFRW 9999 //Number of lines in frw.dat file
-#define DLAMBDA 0.001   //Geodesics parameter step
+#define DLAMBDA 0.01   //Geodesics parameter step
 
 typedef long double mydbl;
 
 /*Interpolation of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of conformal time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
 double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
   double a = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
@@ -29,7 +31,7 @@ double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc
 }
 
 /*Interpolation of derivative of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of conformal time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
 double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
 {
   double adot = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
@@ -56,7 +58,7 @@ mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
-  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr - (1.0 - 4.0*potential(r)/(C*C))*((a*adot)/C)*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
+  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C)) - (1.0 - 2.0*potential(r)/(C*C))*((a*adot)/C)*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta))/(1.0 + 2.0*potential(r)/(C*C));
   return f;
 }
 
@@ -67,7 +69,7 @@ mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
-  mydbl f = - (2.0*adot*p0*pr)/(C*a) - (der_potential(r)*p0*p0)/(a*a*C*C) + r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(-pr*pr + powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)));
+  mydbl f = - (der_potential(r)*p0*p0)/(a*a*C*C*(1.0 - 2.0*potential(r)/(C*C))) - (2.0*adot*p0*pr)/(C*a) + r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)) - pr*pr)/(1.0 - 2.0*potential(r)/(C*C));
   return f;
 }
 
@@ -78,7 +80,7 @@ mydbl geodesic_equation_theta(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_s
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
-  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*(der_potential(r)/powl(C,2.0) - 1/r)*pr*ptheta - (2.0*adot*p0*ptheta)/(C*a);
+  mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*((der_potential(r)/powl(C,2.0))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*ptheta - (2.0*adot*p0*ptheta)/(C*a);
   return f;
 }
 
@@ -89,7 +91,7 @@ mydbl geodesic_equation_phi(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spl
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
-  mydbl f = 2.0*( der_potential(r)/powl(C,2.0) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi - (2.0*adot*p0*pphi)/(a*C);
+  mydbl f = 2.0*( (der_potential(r)/powl(C,2.0))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi - (2.0*adot*p0*pphi)/(a*C);
   return f;
 }
 
@@ -156,13 +158,13 @@ void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spli
 This factor multiplies p0 to guarantee that p1 fulfill the null geodesic condition.*/
 mydbl condition_factor(mydbl r, double a)
 {
-  return (1/a)*(1.0+2.0*potential(r)/(C*C));
+  return (mydbl)(1.0/a)*sqrtl((1.0+2.0*potential(r)/(C*C))/(1.0 - 2.0*potential(r)/(C*C)));
 }
 
 /*$cp^{0}$ multiplied by this factor allows to obtain the energy for a local inertial observer in this spacetime.*/
 mydbl energy_factor(mydbl r)
 {
-  mydbl g = 1.0 + potential(r)/(C*C);
+  mydbl g = sqrtl(1.0 + 2.0*potential(r)/(C*C));
   return g;
 }
 
@@ -211,7 +213,7 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -1000.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft, difference;
+  mydbl ti = 7.0 ,x0, r = -200.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft, difference;
   double difftfrw, aem, aobs;
   x0 = C*ti;
   aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
@@ -220,7 +222,7 @@ int main(void)
   v = violation(r, theta, phi, p0, pr, ptheta, pphi, aem);
   difft = (energy1 - energy1)/energy1;
   difftfrw = (aem/aem) - 1.0;
-  difference = difft - difftfrw;
+  difference = difft - (mydbl)(1.0*difftfrw);
   
 
   /*Pointer to file where solution of differential equation will be saved.*/
@@ -228,7 +230,7 @@ int main(void)
   geodesic = fopen("geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
-  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %16.8Le %.12Lf %.12f %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw, difference);
+  fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8e %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw, difference);
 
   long long int ii;
 
@@ -244,8 +246,8 @@ int main(void)
 	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
 	  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aobs);
 	  difftfrw = (aem/aobs) - 1.0;
-	  difference = difft - difftfrw;
-	  fprintf(geodesic, "%.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %.12Lf %16.8Le %.12Lf %.12f %.12Lf\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw, difference);
+	  difference = difft - (mydbl)(1.0*difftfrw);
+	  fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8e %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw, difference);
 	} 
     }
 
@@ -257,12 +259,4 @@ int main(void)
   gsl_spline_free(spline2);
   gsl_interp_accel_free(acc1);  //Free memory of accel object
   gsl_interp_accel_free(acc2);
-
-  /*TAREAS
-    Arreglar loop (long int).
-   Hacer condicion inicial exacta.
-  Correr con e-05 y comparar con el anterior.
-  Crear branch y poner terminos que se eliminario por ser de segundo orden
-  Correr nuevamente con e-05
-  Poner perturbacion y correr de nuevo*/
 }
