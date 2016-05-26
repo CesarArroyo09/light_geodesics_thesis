@@ -72,7 +72,7 @@ int main (void)
 
   /*File to be written with data*/
   FILE *pf;
-  pf = fopen("frw.dat","w");
+  pf = fopen("scale_factor.dat","w");
 
   /*GSL object. Necessary object to separate enough space in memory for integration. 1 and 2 refer to cosmic and conformal time respectively*/
   gsl_integration_workspace *w1;

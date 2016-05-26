@@ -22,22 +22,13 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 
 typedef long double mydbl;
 
-/*Interpolation of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
-double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
+/*Interpolation of function inside *spline object evaluated at an abscisa 'x'.
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. x is the independent variable where the function is evaluated. *acc is a pointer to a lookup object for interpolations.*/
+double interpolator(gsl_spline *spline, double x, gsl_interp_accel *acc)
 {
-  double a = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
+  double a = gsl_spline_eval(spline, x, acc);  //Interpolates data to abcisa x using method in spline and acceleration object acc
 
-  return a;  //Return scale factor at a time eta
-}
-
-/*Interpolation of derivative of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
-double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
-{
-  double adot = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
-
-  return adot;  //Return derivative of scale factor at a time eta
+  return a;  //Return value of interpolated function at x
 }
 
 /*Function for the gravitational potential to be used. Potential for Plummer model.*/
@@ -57,8 +48,8 @@ ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C)) - (1.0 - 2.0*potential(r)/(C*C))*(a*adot/C)*(pr*pr)/(1.0 + 2.0*potential(r)/(C*C));
   return f;
 }
@@ -68,8 +59,8 @@ ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = - (der_potential(r)*p0*p0)/(a*a*C*C*(1.0 - 2.0*potential(r)/(C*C))) - (2.0*adot*p0*pr)/(C*a) + (der_potential(r)/(C*C))*(pr*pr)/(1.0 - 2.0*potential(r)/(C*C));
   return f;
 }
@@ -147,9 +138,9 @@ int main(void)
   /***READ SCALE FACTOR DATA AND PREPARE OBJECTS FOR INTERPOLATION ***/
   int i;            //For array manipulation
   
-  /*Pointer to frw.data file*/
+  /*Pointer to scale_factor.data file*/
   FILE *frw;        
-  frw = fopen("frw.dat","r");
+  frw = fopen("scale_factor.dat","r");
 
   /*Variables and arrays to read the data*/
   double cosmictime[NLINESFRW], conftime, scale_factor[NLINESFRW], der_scale_factor[NLINESFRW];
@@ -183,7 +174,7 @@ int main(void)
   mydbl ti = 7.0 ,x0, r = -200.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference;
   double difftfrw, aem, aobs;
   x0 = C*ti;
-  aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+  aem = interpolator(spline1, (double)(1.0*ti), acc1);
   pr = condition_factor(r, aem)*p0;
   energy1 = C*energy_factor(r)*p0;
   v = violation(r, p0, pr, aem);
@@ -210,7 +201,7 @@ int main(void)
 	  energy = C*energy_factor(r)*p0;
 	  difft = (energy - energy1)/energy1;
 	  ti = x0/C;
-	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+	  aobs = interpolator(spline1, (double)(1.0*ti), acc1);
 	  v = violation(r, p0, pr, aobs);
 	  difftfrw = (aem/aobs) - 1.0;
 	  difference = difft - (mydbl)(1.0*difftfrw);

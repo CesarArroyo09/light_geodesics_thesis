@@ -10,7 +10,7 @@ scale_factor:
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
 # 	mv $@ $@.x
 
-geodesic_solution_spherical:
+frw_perturbed_spherical_radial_motion:
 	  echo Estoy compilando $@.c
 	  $(CC) $(CFLAGS) $@.c -o $@.o
 	  $(CC) $@.o $(LFLAGS) -lgsl -lgslcblas -lm -o $@.x
