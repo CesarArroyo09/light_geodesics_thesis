@@ -16,7 +16,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 60000000 //Number of steps for solving geodesics
+#define NSTEPS 40000000 //Number of steps for solving geodesics
 #define NLINESFRW 10000 //Number of lines in frw.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 

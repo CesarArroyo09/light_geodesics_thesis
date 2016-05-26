@@ -16,28 +16,19 @@ The coordinates for the photon's geodesics are: (ct,r,\theta,\phi) = (x0,x1,x2,x
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 30000000000 //Number of steps for solving geodesics
-#define NLINESFRW 9999 //Number of lines in frw.dat file
-#define DLAMBDA 0.00001   //Geodesics parameter step
+#define NSTEPS 40000000 //Number of steps for solving geodesics
+#define NLINESFRW 10000 //Number of lines in frw.dat file
+#define DLAMBDA 0.01   //Geodesics parameter step
 
 typedef long double mydbl;
 
-/*Interpolation of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
-double interp_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
+/*Interpolation of function inside *spline object evaluated at an abscisa 'x'.
+Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. x is the independent variable where the function is evaluated. *acc is a pointer to a lookup object for interpolations.*/
+double interpolator(gsl_spline *spline, double x, gsl_interp_accel *acc)
 {
-  double a = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
+  double a = gsl_spline_eval(spline, x, acc);  //Interpolates data to abcisa x using method in spline and acceleration object acc
 
-  return a;  //Return scale factor at a time eta
-}
-
-/*Interpolation of derivative of scale factor at time eta.
-Argument *spline is a pointer to a spline object which stores the type of interpolation to be made. eta is value of cosmic time to be evaluated. *acc is a pointer to a lookup object for interpolations.*/
-double interp_der_scale_factor(gsl_spline *spline, double eta, gsl_interp_accel *acc)
-{
-  double adot = gsl_spline_eval(spline, eta, acc);  //Interpolates data to abcisa eta using method in spline and acceleration object acc
-
-  return adot;  //Return derivative of scale factor at a time eta
+  return a;  //Return value of interpolated function at x
 }
 
 /*Function for the gravitational potential to be used. Potential for Plummer model.*/
@@ -57,8 +48,8 @@ ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C)) - (1.0 - 2.0*potential(r)/(C*C))*((a*adot)/C)*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta))/(1.0 + 2.0*potential(r)/(C*C));
   return f;
 }
@@ -68,8 +59,8 @@ ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = - (der_potential(r)*p0*p0)/(a*a*C*C*(1.0 - 2.0*potential(r)/(C*C))) - (2.0*adot*p0*pr)/(C*a) + r*(ptheta*ptheta + sinl(theta)*sinl(theta)*pphi*pphi) - (der_potential(r)/(C*C))*(powl(r,2.0)*(powl(ptheta,2.0) + powl(sinl(theta)*pphi,2.0)) - pr*pr)/(1.0 - 2.0*potential(r)/(C*C));
   return f;
 }
@@ -79,8 +70,8 @@ ${p2}^{dot} = f2(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_theta(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = 0.5*sinl(2.0*theta)*pphi*pphi + 2.0*((der_potential(r)/powl(C,2.0))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*ptheta - (2.0*adot*p0*ptheta)/(C*a);
   return f;
 }
@@ -90,13 +81,13 @@ ${p3}^{dot} = f3(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_phi(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, mydbl x0, mydbl r, mydbl theta)
 {
   double t = (double)(1.0*x0/C);
-  mydbl a = (mydbl) 1.0*interp_scale_factor(spline1, t, acc1);
-  mydbl adot = (mydbl) 1.0*interp_der_scale_factor(spline2, t, acc2);
+  mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
+  mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
   mydbl f = 2.0*( (der_potential(r)/powl(C,2.0))/(1.0 - 2.0*potential(r)/(C*C)) - 1.0/r)*pr*pphi - 2.0*(1.0/tanl(theta))*ptheta*pphi - (2.0*adot*p0*pphi)/(a*C);
   return f;
 }
 
-/*Function for solving the geodesics differential equations using Euler's method.
+/*Function for solving the geodesics differential equations using 4th order Runge-Kutta method.
 Arguments are pointer so variables in that memory addresses are changed every time this function is called.*/
 void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl *x0, mydbl *x1, mydbl *x2, mydbl *x3, mydbl *p0, mydbl *p1, mydbl *p2, mydbl *p3, mydbl *lambda)
 {
@@ -117,25 +108,25 @@ void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spli
   k1p3 = DLAMBDA*geodesic_equation_phi(spline1, acc1, spline2, acc2, *p0, *p1, *p2, *p3, *x0, *x1, *x2);
 
   /*This section calculates the k2 quantities*/
-  k2x0 = DLAMBDA*(*p0 + 0.5*k1x0); k2x1 = DLAMBDA*(*p1 + 0.5*k1x1); k2x2 = DLAMBDA*(*p2 + 0.5*k1x2); k2x3 = DLAMBDA*(*p3 + 0.5*k1x3);
+  k2x0 = DLAMBDA*(*p0 + 0.5*k1p0); k2x1 = DLAMBDA*(*p1 + 0.5*k1p1); k2x2 = DLAMBDA*(*p2 + 0.5*k1p2); k2x3 = DLAMBDA*(*p3 + 0.5*k1p3);
   k2p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2);
   k2p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2);
   k2p2 = DLAMBDA*geodesic_equation_theta(spline1, acc1, spline2, acc2, *p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2);
   k2p3 = DLAMBDA*geodesic_equation_phi(spline1, acc1, spline2, acc2, *p0 + 0.5*k1p0, *p1 + 0.5*k1p1, *p2 + 0.5*k1p2, *p3 + 0.5*k1p3, *x0 + 0.5*k1x0, *x1 + 0.5*k1x1, *x2 + 0.5*k1x2);
 
   /*This section calculates the k3 quantities*/
-  k3x0 = DLAMBDA*(*p0 + 0.5*k2x0); k3x1 = DLAMBDA*(*p1 + 0.5*k2x1); k3x2 = DLAMBDA*(*p2 + 0.5*k2x2); k3x3 = DLAMBDA*(*p3 + 0.5*k2x3);
+  k3x0 = DLAMBDA*(*p0 + 0.5*k2p0); k3x1 = DLAMBDA*(*p1 + 0.5*k2p1); k3x2 = DLAMBDA*(*p2 + 0.5*k2p2); k3x3 = DLAMBDA*(*p3 + 0.5*k2p3);
   k3p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2);
   k3p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2);
   k3p2 = DLAMBDA*geodesic_equation_theta(spline1, acc1, spline2, acc2, *p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2);
   k3p3 = DLAMBDA*geodesic_equation_phi(spline1, acc1, spline2, acc2, *p0 + 0.5*k2p0, *p1 + 0.5*k2p1, *p2 + 0.5*k2p2, *p3 + 0.5*k2p3, *x0 + 0.5*k2x0, *x1 + 0.5*k2x1, *x2 + 0.5*k2x2);
 
   /*This section calculates the k4 quantities*/
-  k4x0 = DLAMBDA*(*p0 + k3x0); k4x1 = DLAMBDA*(*p1 + k3x1); k4x2 = DLAMBDA*(*p2 + k3x2); k4x3 = DLAMBDA*(*p3 + k3x3);
-  k4p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *p2 + 0.5*k3p2, *p3 + 0.5*k3p3, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1, *x2 + 0.5*k3x2);
-  k4p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *p2 + 0.5*k3p2, *p3 + 0.5*k3p3, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1, *x2 + 0.5*k3x2);
-  k4p2 = DLAMBDA*geodesic_equation_theta(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *p2 + 0.5*k3p2, *p3 + 0.5*k3p3, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1, *x2 + 0.5*k3x2);
-  k4p3 = DLAMBDA*geodesic_equation_phi(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *p2 + 0.5*k3p2, *p3 + 0.5*k3p3, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1, *x2 + 0.5*k3x2);
+  k4x0 = DLAMBDA*(*p0 + k3p0); k4x1 = DLAMBDA*(*p1 + k3p1); k4x2 = DLAMBDA*(*p2 + k3p2); k4x3 = DLAMBDA*(*p3 + k3p3);
+  k4p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2);
+  k4p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2);
+  k4p2 = DLAMBDA*geodesic_equation_theta(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2);
+  k4p3 = DLAMBDA*geodesic_equation_phi(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *p2 + k3p2, *p3 + k3p3, *x0 + k3x0, *x1 + k3x1, *x2 + k3x2);
 
   /*Calculation of the increments*/
   dx0 = (k1x0 + 2.0*k2x0 + 2.0*k3x0 + k4x0)/6.0;
@@ -170,7 +161,7 @@ mydbl energy_factor(mydbl r)
 }
 
 /*Violation of null geodesics condition $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.*/
-mydbl violation(mydbl r, mydbl theta, mydbl phi, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, double a)
+mydbl violation(mydbl r, mydbl theta, mydbl p0, mydbl pr, mydbl ptheta, mydbl pphi, double a)
 {
   mydbl f = -(1.0+2.0*potential(r)/(C*C))*p0*p0 + a*a*(1.0-2.0*potential(r)/(C*C))*(pr*pr + r*r*(powl(sinl(theta),2.0)*pphi*pphi + ptheta*ptheta));
   return f;
@@ -181,9 +172,9 @@ int main(void)
   /***READ SCALE FACTOR DATA AND PREPARE OBJECTS FOR INTERPOLATION ***/
   int i;            //For array manipulation
   
-  /*Pointer to frw.data file*/
+  /*Pointer to scale_factor.dat file*/
   FILE *frw;        
-  frw = fopen("frw.dat","r");
+  frw = fopen("scale_factor.dat","r");
 
   /*Variables and arrays to read the data*/
   double cosmictime[NLINESFRW], conftime, scale_factor[NLINESFRW], der_scale_factor[NLINESFRW];
@@ -217,10 +208,10 @@ int main(void)
   mydbl ti = 7.0 ,x0, r = -200.0, theta = M_PI*0.5, phi = M_PI*0.5, p0 = 1.0e-3, pr, ptheta = 0.0, pphi = 0.0, lambda = 0.0, energy1, energy, v, difft, difference;
   double difftfrw, aem, aobs;
   x0 = C*ti;
-  aem = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
+  aem = interpolator(spline1, (double)(1.0*ti), acc1);
   pr = condition_factor(r, aem)*p0;
   energy1 = C*energy_factor(r)*p0;
-  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aem);
+  v = violation(r, theta, p0, pr, ptheta, pphi, aem);
   difft = (energy1 - energy1)/energy1;
   difftfrw = (aem/aem) - 1.0;
   difference = difft - (mydbl)(1.0*difftfrw);
@@ -244,8 +235,8 @@ int main(void)
 	  energy = C*energy_factor(r)*p0;
 	  difft = (energy - energy1)/energy1;
 	  ti = x0/C;
-	  aobs = interp_scale_factor(spline1, (double)(1.0*ti), acc1);
-	  v = violation(r, theta, phi, p0, pr, ptheta, pphi, aobs);
+	  aobs = interpolator(spline1, (double)(1.0*ti), acc1);
+	  v = violation(r, theta, p0, pr, ptheta, pphi, aobs);
 	  difftfrw = (aem/aobs) - 1.0;
 	  difference = difft - (mydbl)(1.0*difftfrw);
 	  fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8e %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy, v, difft, difftfrw, difference);
