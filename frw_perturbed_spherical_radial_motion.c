@@ -16,7 +16,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 40000000 //Number of steps for solving geodesics
+#define NSTEPS 75000000 //Number of steps for solving geodesics
 #define NLINESFRW 10000 //Number of lines in frw.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -95,8 +95,8 @@ void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spli
 
   /*This section calculates the k4 quantities*/
   k4x0 = DLAMBDA*(*p0 + k3p0); k4x1 = DLAMBDA*(*p1 + k3p1);
-  k4p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1);
-  k4p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + 0.5*k3p0, *p1 + 0.5*k3p1, *x0 + 0.5*k3x0, *x1 + 0.5*k3x1);
+  k4p0 = DLAMBDA*geodesic_equation_0(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *x0 + k3x0, *x1 + k3x1);
+  k4p1 = DLAMBDA*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + k3p0, *p1 + k3p1, *x0 + k3x0, *x1 + k3x1);
 
   /*Calculation of the increments*/
   dx0 = (k1x0 + 2.0*k2x0 + 2.0*k3x0 + k4x0)/6.0;
@@ -171,7 +171,7 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -200.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference;
+  mydbl ti = 7.0 ,x0, r = -500.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference;
   double difftfrw, aem, aobs;
   x0 = C*ti;
   aem = interpolator(spline1, (double)(1.0*ti), acc1);
@@ -193,7 +193,7 @@ int main(void)
   long long int ii;
 
   /*Solution of the differential equation*/
-  for(ii=0; ii<(1+ NSTEPS); ii++)
+  for(ii=0; ii< NSTEPS; ii++)
     {
       runge_kutta_4(spline1, acc1, spline2, acc2, &x0, &r, &p0, &pr, &lambda);
       if((ii%(NSTEPS/NLINES)) == 0)
