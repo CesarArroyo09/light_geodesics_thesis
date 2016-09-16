@@ -140,7 +140,7 @@ int main(void)
   
   /*Pointer to scale_factor.data file*/
   FILE *frw;        
-  frw = fopen("scale_factor.dat","r");
+  frw = fopen("../scale_factor.dat","r");
 
   /*Variables and arrays to read the data*/
   double cosmictime[NLINESFRW], conftime, scale_factor[NLINESFRW], der_scale_factor[NLINESFRW];
