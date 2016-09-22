@@ -14,7 +14,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define G 43007.01     //Gravitational constant
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NSTEPS 100000000 //Number of steps for solving geodesics
+#define NSTEPS 75000000 //Number of steps for solving geodesics
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -23,13 +23,24 @@ typedef long double mydbl;
 /*Function for the gravitational potential to be used. Potential for Plummer model.*/
 mydbl potential(mydbl r)
 {
-  return -G*M/(sqrtl(A*A + r*r));
+  mydbl absr = fabsl(r);
+  return -G*M/(absr+A);
 }
 
 /*Derivative of potential respect to radial coordinate.*/
 mydbl der_potential(mydbl r)
 {
-  return G*M*r/(powl(A*A+r*r, 1.5));
+  double rsign = copysign(1.0,(double)(1.0*r));
+  mydbl absr = fabsl(r);
+  //return -G*M/powl(absr+A,2.0);
+  if(rsign == -1.0)
+    {
+      return -G*M/powl(absr+A,2.0);
+    }
+  else if(rsign == 1.0)
+    {
+      return G*M/powl(absr+A,2.0);
+    }
 }
 
 /*Function of the 0th momentum component differential equation for the geodesics.
@@ -120,10 +131,11 @@ mydbl violation(mydbl r, mydbl p0, mydbl pr)
 int main(void)
 {
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = -500.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft;
+  mydbl x0 = 0.0, r = -500.0, p0 =1.0e-03, pr, lambda = 0.0, energy1, energy, v, difft;
   pr = condition_factor(r)*p0;
   energy1 = C*energy_factor(r)*p0;
   v = violation(r, p0, pr);
+  //energy = C*energy_factor(r)*p0;
   difft = (energy1 - energy1)/energy1;
   
   /*Pointer to file where solution of differential equation will be saved.*/
@@ -138,6 +150,10 @@ int main(void)
   /*Solution of the differential equation*/
   for(ii=0; ii< NSTEPS; ii++)
     {
+      /* if(r > -1.0) */
+      /* 	{ */
+      /* 	  break; */
+      /* 	} */
       runge_kutta_4(&x0, &r, &p0, &pr, &lambda);
       if((ii%(NSTEPS/NLINES)) == 0)
 	{

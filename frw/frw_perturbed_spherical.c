@@ -219,7 +219,7 @@ int main(void)
 
   /*Pointer to file where solution of differential equation will be saved.*/
   FILE *geodesic;
-  geodesic = fopen("geodesic_solution.dat","w");
+  geodesic = fopen("../geodesic_solution.dat","w");
 
   /*Write line of initial values in file*/
   fprintf(geodesic, "%16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8Le %16.8e %16.8Le\n", lambda, x0, r, theta, phi, p0, pr, ptheta, pphi, energy1, v, difft, difftfrw, difference);

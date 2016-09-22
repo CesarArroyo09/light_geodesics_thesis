@@ -1,7 +1,7 @@
 /*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime in SPHERICAL coordinates and restricted to RADIAL MOTION with a Runge-Kutta-Fehlberg 45 method.*/
 
 /*This program solves the particular case for flat FRW perturbed spacetime with metric: $g_{ab} = {[g]}_{ab} + h_{ab}$. Where ${[g]}_{ab}$ corresponds to the flat FRW metric and $h_{ab}$ corresponds to the perturbation in the conformal Newtonian gauge. A Plummer potential with adequate parameters have been used to simulate the perturbation.
-The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$ and the indice $\alpha$ runs from 0 to 1 since the motion is only radial.
+The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\beta})$ and the indices $\alpha$ and $\beta$ run from 0 to 1 since the motion is only radial.
 Where $p^{\alpha}={\dot{x}}^{\alpha}$.
 The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 
@@ -17,7 +17,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define M 0.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
 
-/* PROGRAM PARAMETERS */
+/* PROGRAM PARAMETERS (ONLY USING NLINES FRW) */
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define NSTEPS 75000000 //Number of steps for solving geodesics
 #define NLINESFRW 10000 //Number of lines in frw.dat file
@@ -78,7 +78,7 @@ mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
-  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C)) - (1.0 - 2.0*potential(r)/(C*C))*(a*adot/C)*(pr*pr)/(1.0 + 2.0*potential(r)/(C*C));
+  mydbl f = -2.0*der_potential(r)*p0*pr/(C*C + 2.0*potential(r)) - (1.0 - 2.0*potential(r)/(C*C))*(a*adot)*(pr*pr)/(C + 2.0*potential(r)/C);
   return f;
 }
 
@@ -89,7 +89,7 @@ mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
-  mydbl f = - (der_potential(r)*p0*p0)/(a*a*C*C*(1.0 - 2.0*potential(r)/(C*C))) - (2.0*adot*p0*pr)/(C*a) + (der_potential(r)/(C*C))*(pr*pr)/(1.0 - 2.0*potential(r)/(C*C));
+  mydbl f = - (der_potential(r)*p0*p0)/(a*a*(C*C - 2.0*potential(r))) - (2.0*adot*p0*pr)/(C*a) + der_potential(r)*(pr*pr)/(C*C - 2.0*potential(r));
   return f;
 }
 
@@ -126,8 +126,8 @@ void runge_kutta_fehlberg(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
   mydbl k5x0, k5x1, k5p0, k5p1;
   mydbl k6x0, k6x1, k6p0, k6p1;
   
-  /*Define the errors for every differential equation, a vector that carries them and a variable for storing the biggest error*/
-  mydbl r[4], rp0, rp1, rx0, rx1, rmax;
+  /*Define a vector that carries the errors for each differential equation and a variable for storing the biggest error*/
+  mydbl r[4], rmax;
 
   /*Define the increments for the values to be solved in the differential equations*/
   mydbl dp0, dp1, dx0, dx1;
@@ -179,11 +179,10 @@ void runge_kutta_fehlberg(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_splin
       k6p1 = *dlambda*geodesic_equation_r(spline1, acc1, spline2, acc2, *p0 + a61*k1p0 + a62*k2p0 + a63*k3p0 + a64*k4p0 + a65*k5p0, *p1 + a61*k1p1 + a62*k2p1 + a63*k3p1 + a64*k4p1 + a65*k5p1, *x0 + a61*k1x0 + a62*k2x0 + a63*k3x0 + a64*k4x0 + a65*k5x0, *x1 + a61*k1x1 + a62*k2x1 + a63*k3x1 + a64*k4x1 + a65*k5x1);
 
       /*Determination of the biggest error between the errors for each differential equation*/
-      rp0 = fabsl(r1*k1p0 + r3*k3p0 + r4*k4p0 + r5*k5p0 + r6*k6p0)/(*dlambda);
-      rp1 = fabsl(r1*k1p1 + r3*k3p1 + r4*k4p1 + r5*k5p1 + r6*k6p1)/(*dlambda);
-      rx0 = fabsl(r1*k1x0 + r3*k3x0 + r4*k4x0 + r5*k5x0 + r6*k6x0)/(*dlambda);
-      rx1 = fabsl(r1*k1x1 + r3*k3x1 + r4*k4x1 + r5*k5x1 + r6*k6x1)/(*dlambda);
-      r[0] = rp0; r[1] = rp1; r[2] = rx0; r[3] = rx1;
+      r[0] = fabsl(r1*k1p0 + r3*k3p0 + r4*k4p0 + r5*k5p0 + r6*k6p0)/(*dlambda);
+      r[1] = fabsl(r1*k1p1 + r3*k3p1 + r4*k4p1 + r5*k5p1 + r6*k6p1)/(*dlambda);
+      r[2] = fabsl(r1*k1x0 + r3*k3x0 + r4*k4x0 + r5*k5x0 + r6*k6x0)/(*dlambda);
+      r[3] = fabsl(r1*k1x1 + r3*k3x1 + r4*k4x1 + r5*k5x1 + r6*k6x1)/(*dlambda);
       rmax = maxValue(r, 4);
 
       /*Check whether the worst approximation is less than the introduced tolerance*/
@@ -244,7 +243,7 @@ int main(void)
   
   /*Pointer to scale_factor.data file*/
   FILE *frw;        
-  frw = fopen("scale_factor.dat","r");
+  frw = fopen("../scale_factor.dat","r");
 
   /*Variables and arrays to read the data*/
   double cosmictime[NLINESFRW], conftime, scale_factor[NLINESFRW], der_scale_factor[NLINESFRW];
@@ -275,7 +274,7 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
 
   /*Parameters for RKF method*/
-  mydbl dlambda_max = 1.0e-03, dlambda_min = 1.0e-05, tol = 1.0e-07, lambdaEndPoint = 1.0e+03;
+  mydbl dlambda_max = 1.0e-01, dlambda_min = 1.0e-05, tol = 1.0e-10, lambdaEndPoint = 1.0e+05;
 
   /*Initial conditions*/
   mydbl ti = 7.0 ,x0, r = -500.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference, dlambda = dlambda_max;
@@ -301,7 +300,7 @@ int main(void)
 
   /************************************************************************************/
 
-  /*** Releasing all used space in memory ***/
+  /***RELEASING ALL SPACE USED IN MEMORY***/
   fclose(geodesic); //Close file storing the results
   gsl_spline_free(spline1);  //Free memory of spline object
   gsl_spline_free(spline2);

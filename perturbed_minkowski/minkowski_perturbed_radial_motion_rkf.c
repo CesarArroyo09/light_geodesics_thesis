@@ -1,8 +1,8 @@
 /*This program evaluates the differential equations for a photon's geodesic in a perturbed Minkowski spacetime in SPHERICAL coordinates restricted to RADIAL MOTION with a Runge-Kutta-Fehlberg 45 method.*/
 
 /*This program solves the particular case for the Minkowski perturbed spacetime with metric: $g_{ab} = {\eta}_{ab} + h_{ab}$. Where $h_{ab}$ corresponds to the perturbation in the Newtonian weak field limit. A Plummer potential with adequate parameters have been used to simulate the perturbation.
-The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$.
-Where $p^{\alpha}={\dot{x}}^{\alpha}$ and the indice $\alpha$ runs from 0 to 3.
+The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x,p)$.
+Where $p^{\alpha}={\dot{x}}^{\alpha}$ and the indice $\alpha$ runs from 0 to 1 since the motion is only radial.
 This system can be restricted by initial conditions in $p^{\theta} = p^{\phi} = 0$ to radial motion only so $\theta$ and $\phi$ are fixed in evolution.
 The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 
@@ -64,7 +64,7 @@ mydbl der_potential(mydbl r)
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 {
-  mydbl f = -(2.0/(C*C))*der_potential(r)*p0*pr/(1.0 + 2.0*potential(r)/(C*C));
+  mydbl f = -2.0*der_potential(r)*p0*pr/(C*C + 2.0*potential(r));
   return f;
 }
 
@@ -72,7 +72,7 @@ mydbl geodesic_equation_0(mydbl p0, mydbl pr, mydbl r)
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
 mydbl geodesic_equation_r(mydbl p0, mydbl pr, mydbl r)
 {
-  mydbl f =  (der_potential(r)/(C*C))*(pr*pr - p0*p0)/(1.0 - 2.0*potential(r)/(C*C));
+  mydbl f =  der_potential(r)*(pr*pr - p0*p0)/(C*C - 2.0*potential(r));
   return f;
 }
 
@@ -109,8 +109,8 @@ void runge_kutta_fehlberg(mydbl *x0, mydbl *x1, mydbl *p0, mydbl *p1, mydbl *lam
   mydbl k5x0, k5x1, k5p0, k5p1;
   mydbl k6x0, k6x1, k6p0, k6p1;
   
-  /*Define the errors for every differential equation, a vector that carries them and a variable for storing the biggest error*/
-  mydbl r[4], rp0, rp1, rx0, rx1, rmax;
+  /*Define a vector that carries the error for each differential equation and a variable for storing the biggest error*/
+  mydbl r[4], rmax;
 
   /*Define the increments for the values to be solved in the differential equations*/
   mydbl dp0, dp1, dx0, dx1;
@@ -161,11 +161,10 @@ void runge_kutta_fehlberg(mydbl *x0, mydbl *x1, mydbl *p0, mydbl *p1, mydbl *lam
       k6p1 = *dlambda*geodesic_equation_r(*p0 + a61*k1p0 + a62*k2p0 + a63*k3p0 + a64*k4p0 + a65*k5p0, *p1 + a61*k1p1 + a62*k2p1 + a63*k3p1 + a64*k4p1 + a65*k5p1, *x1 + a61*k1x1 + a62*k2x1 + a63*k3x1 + a64*k4x1 + a65*k5x1);
 
       /*Determination of the biggest error between the errors for each differential equation*/
-      rp0 = fabsl(r1*k1p0 + r3*k3p0 + r4*k4p0 + r5*k5p0 + r6*k6p0)/(*dlambda);
-      rp1 = fabsl(r1*k1p1 + r3*k3p1 + r4*k4p1 + r5*k5p1 + r6*k6p1)/(*dlambda);
-      rx0 = fabsl(r1*k1x0 + r3*k3x0 + r4*k4x0 + r5*k5x0 + r6*k6x0)/(*dlambda);
-      rx1 = fabsl(r1*k1x1 + r3*k3x1 + r4*k4x1 + r5*k5x1 + r6*k6x1)/(*dlambda);
-      r[0] = rp0; r[1] = rp1; r[2] = rx0; r[3] = rx1;
+      r[0] = fabsl(r1*k1p0 + r3*k3p0 + r4*k4p0 + r5*k5p0 + r6*k6p0)/(*dlambda);
+      r[1] = fabsl(r1*k1p1 + r3*k3p1 + r4*k4p1 + r5*k5p1 + r6*k6p1)/(*dlambda);
+      r[2] = fabsl(r1*k1x0 + r3*k3x0 + r4*k4x0 + r5*k5x0 + r6*k6x0)/(*dlambda);
+      r[3] = fabsl(r1*k1x1 + r3*k3x1 + r4*k4x1 + r5*k5x1 + r6*k6x1)/(*dlambda);
       rmax = maxValue(r, 4);
 
       /*Check whether the worst approximation is less than the introduced tolerance*/
@@ -188,6 +187,7 @@ void runge_kutta_fehlberg(mydbl *x0, mydbl *x1, mydbl *p0, mydbl *p1, mydbl *lam
 
       /*Calculate a new stepsize*/
       delta = 0.84*powl(tol/rmax, 0.25);
+      printf("%16.8Le\n", delta);
 
       if(delta <= 0.1)
 	{
@@ -220,10 +220,10 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH STATIC PLUMMER POTENTIAL ***/
   
   /*Parameters for RKF method*/
-  mydbl dlambda_max = 1.0e-03, dlambda_min = 1.0e-05, tol = 1.0e-07, lambdaEndPoint = 1.0e+04;
+  mydbl dlambda_max = 1.0e-03, dlambda_min = 1.0e-05, tol = 1.0e-10, lambdaEndPoint = 1.0e+04;
 
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = -500.0, p0 = 1.0e-2, pr, lambda = 0.0, energy1, energy, v, difft, dlambda = dlambda_max;
+  mydbl x0 = 0.0, r = -500.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, dlambda = dlambda_max;
   pr = condition_factor(r)*p0;
   energy1 = C*energy_factor(r)*p0;
   v = violation(r, p0, pr);
