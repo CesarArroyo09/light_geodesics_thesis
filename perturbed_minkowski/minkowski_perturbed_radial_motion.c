@@ -14,7 +14,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define G 43007.01     //Gravitational constant
 #define M 15000.0     //Mass of the perturbation
 #define C 299792.458  //Speed of light
-#define NSTEPS 75000000 //Number of steps for solving geodesics
+#define NSTEPS 200000000 //Number of steps for solving geodesics
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -131,7 +131,7 @@ mydbl violation(mydbl r, mydbl p0, mydbl pr)
 int main(void)
 {
   /*Initial conditions*/
-  mydbl x0 = 0.0, r = -500.0, p0 =1.0e-03, pr, lambda = 0.0, energy1, energy, v, difft;
+  mydbl x0 = 0.0, r = -1000.0, p0 =1.0e-03, pr, lambda = 0.0, energy1, energy, v, difft;
   pr = condition_factor(r)*p0;
   energy1 = C*energy_factor(r)*p0;
   v = violation(r, p0, pr);

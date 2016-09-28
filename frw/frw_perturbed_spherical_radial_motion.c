@@ -20,7 +20,7 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 
 /* PROGRAM PARAMETERS (ONLY USING NLINES FRW) */
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 1000000000 //Number of steps for solving geodesics
+#define NSTEPS 150000000 //Number of steps for solving geodesics
 #define NLINESFRW 10000 //Number of lines in frw.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -206,7 +206,7 @@ int main(void)
   model_in_use = hernquist_model;
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -2000.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference, pfrw, isw;
+  mydbl ti = 7.0 ,x0, r = -1000.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference, pfrw, isw;
   double difftfrw, aem, aobs;
   x0 = C*ti;
   aem = interpolator(spline1, (double)(1.0*ti), acc1);
