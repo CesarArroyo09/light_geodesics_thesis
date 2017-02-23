@@ -2,6 +2,9 @@
 *~
 *#
 
+#wolfram_mathematica
+*.nb
+
 #tar&zips
 *.tar.gz
 

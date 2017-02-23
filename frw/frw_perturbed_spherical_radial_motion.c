@@ -1,4 +1,4 @@
-/*This program evaluates the differential equations for a photon's geodesic in a perturbed spacetime in SPHERICAL coordinates and restricted to photon RADIAL MOTION only.*/
+/*This program evaluates the differential equations for a photon's geodesic in a FRW perturbed spacetime in SPHERICAL coordinates and restricted to photon RADIAL MOTION only.*/
 
 /*This program solves the particular case for flat FRW perturbed spacetime with metric: $g_{ab} = {[g]}_{ab} + h_{ab}$. Where ${[g]}_{ab}$ corresponds to the flat FRW metric and $h_{ab}$ corresponds to the perturbation in the conformal Newtonian gauge. A Plummer potential or a Hernquist potential with adequate parameters can be used to simulate the perturbation.
 The equations are written in the form $\frac{d(x or p)^{\alpha}}{d\lambda}=f(x^{\alpha},p^{\alpha})$ and the indice $\alpha$ runs from 0 to 1 since the motion is only radial.
@@ -18,9 +18,9 @@ The coordinates for the photon's geodesics are then: (ct,r) = (x0,x1).*/
 #define C 299792.458  //Speed of light
 #define GAMMA 0.8    //Parameter for halo mass evolution
 
-/* PROGRAM PARAMETERS (ONLY USING NLINES FRW) */
+/* PROGRAM PARAMETERS */
 #define NLINES 100000 //Number of lines in geodesic_solution.dat file
-#define NSTEPS 150000000 //Number of steps for solving geodesics
+#define NSTEPS 600000000 //Number of steps for solving geodesics
 #define NLINESFRW 10000 //Number of lines in frw.dat file
 #define DLAMBDA 0.01   //Geodesics parameter step
 
@@ -42,57 +42,67 @@ mydbl mass(mydbl a)
 }
 
 /*Plummer model. Provided two variables pointers, this function stores the potential and the derivative of the potential for the Plummer model in these variables at a given radius.*/
-void plummer_model(mydbl a, mydbl r, mydbl *potential, mydbl *der_potential)
+void plummer_model(mydbl a, mydbl adot, mydbl r, mydbl *potential, mydbl *der_potential_radial, mydbl *der_potential_temporal)
 {
   *potential = -G*mass(a)/(sqrtl(A*A + r*r));
-  *der_potential = G*mass(a)*r/(powl(A*A+r*r, 1.5));
+  *der_potential_radial = G*mass(a)*r/(powl(A*A+r*r, 1.5));
+  *der_potential_temporal = *potential*GAMMA*adot/(a*a);
 }
 
 /*Hernquist model. Provided two variables pointers, this function stores the potential and the derivative of the potential for the Hernquist model in these variables at a given radius.*/
-void hernquist_model(mydbl a, mydbl r, mydbl *potential, mydbl *der_potential)
+void hernquist_model(mydbl a, mydbl adot, mydbl r, mydbl *potential, mydbl *der_potential_radial, mydbl *der_potential_temporal)
 {
   double rsign = copysign(1.0,(double)(1.0*r));
   mydbl absr = fabsl(r);
-  *potential = -G*mass(a)/(A + absr);
-  if(rsign == -1.0)
+  if(absr > 2000.0)
     {
-      *der_potential = -G*mass(a)/powl(absr+A,2.0);
+      *potential = 0.0;
+      *der_potential_radial = 0.0;
+      *der_potential_temporal = 0.0;
+    }
+  else if(rsign == -1.0)
+    {
+      *potential = -G*mass(a)/(A + absr);
+      *der_potential_radial = -G*mass(a)/powl(absr+A,2.0);
+      *der_potential_temporal = *potential*GAMMA*adot/(a*a);
     }
   else if(rsign == 1.0)
     {
-      *der_potential = G*mass(a)/powl(absr+A,2.0);
+      *potential = -G*mass(a)/(A + absr);
+      *der_potential_radial = G*mass(a)/powl(absr+A,2.0);
+      *der_potential_temporal = *potential*GAMMA*adot/(a*a);
     }
 }
 
 /*Function of the 0th momentum component differential equation for the geodesics.
 ${p0}^{dot} = f0(x^{\alpha},p^{\alpha})$.*/
-mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+mydbl geodesic_equation_0(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
-  mydbl potential, der_potential;
-  (*model)(a, r, &potential, &der_potential);
-  mydbl f = -2.0*der_potential*p0*pr/(C*C + 2.0*potential) - (1.0 - 2.0*potential/(C*C))*(a*adot)*(pr*pr)/(C + 2.0*potential/C);
+  mydbl potential, der_potential_radial, der_potential_temporal;
+  (*model)(a, adot, r, &potential, &der_potential_radial, &der_potential_temporal);
+  mydbl f = -2.0*p0*(der_potential_temporal*p0/C + der_potential_radial*pr)/(C*C + 2.0*potential) + der_potential_temporal*(p0*p0 + a*a*pr*pr)/(C*C*C) - (1.0 - 2.0*potential/(C*C))*(a*adot)*(pr*pr)/(C + 2.0*potential/C);
   return f;
 }
 
 /*Function of the 1th (radial) momentum component differential equation for the geodesics.
 ${p1}^{dot} = f1(x^{\alpha},p^{\alpha})$.*/
-mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+mydbl geodesic_equation_r(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl p0, mydbl pr, mydbl x0, mydbl r, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
   double t = (double)(1.0*x0/C);
   mydbl a = (mydbl) 1.0*interpolator(spline1, t, acc1);
   mydbl adot = (mydbl) 1.0*interpolator(spline2, t, acc2);
-  mydbl potential, der_potential;
-  (*model)(a, r, &potential, &der_potential);
-  mydbl f = - (der_potential*p0*p0)/(a*a*(C*C - 2.0*potential)) - (2.0*adot*p0*pr)/(C*a) + der_potential*(pr*pr)/(C*C - 2.0*potential);
+  mydbl potential, der_potential_radial, der_potential_temporal;
+  (*model)(a, adot, r, &potential, &der_potential_radial, &der_potential_temporal);
+  mydbl f = - (der_potential_radial*p0*p0)/(a*a*(C*C - 2.0*potential)) - (2.0*adot*p0*pr)/(C*a) + der_potential_radial*(pr*pr)/(C*C - 2.0*potential) + 2.0*der_potential_temporal*p0*pr/(a*a*C*(C*C - 2.0*potential));
   return f;
 }
 
 /*Function for solving the geodesics differential equations using 4th order Runge-Kutta method.
 Arguments are pointer so variables in that memory addresses are changed every time this function is called.*/
-void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl *x0, mydbl *x1, mydbl *p0, mydbl *p1, mydbl *lambda, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spline2, gsl_interp_accel *acc2, mydbl *x0, mydbl *x1, mydbl *p0, mydbl *p1, mydbl *lambda, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
   /*Increment in the variables of the differential equation we want to solve*/
   mydbl dx0, dx1, dp0, dp1;
@@ -139,27 +149,27 @@ void runge_kutta_4(gsl_spline *spline1, gsl_interp_accel *acc1, gsl_spline *spli
 
 /*To set the initial value of pr, it must hold $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.
 This factor multiplies p0 to guarantee that p1 fulfill the null geodesic condition.*/
-mydbl condition_factor(mydbl r, double a, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+mydbl condition_factor(mydbl r, double a, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
-  mydbl potential, der_potential;
-  (*model)((mydbl)(1.0*a), r, &potential, &der_potential);
+  mydbl potential, der_potential_radial, der_potential_temporal;
+  (*model)((mydbl)(1.0*a), 0.0, r, &potential, &der_potential_radial, &der_potential_temporal);
   return (mydbl)(1.0/a)*sqrtl((C*C + 2.0*potential)/(C*C - 2.0*potential));
 }
 
 /*$cp^{0}$ multiplied by this factor allows to obtain the energy for a local inertial observer in this spacetime.*/
-mydbl energy_factor(mydbl r, double a, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+mydbl energy_factor(mydbl r, double a, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
-  mydbl potential, der_potential;
-  (*model)((mydbl)(1.0*a), r, &potential, &der_potential);
+  mydbl potential, der_potential_radial, der_potential_temporal;
+  (*model)((mydbl)(1.0*a), 0.0, r, &potential, &der_potential_radial, &der_potential_temporal);
   mydbl g = sqrtl(1.0 + 2.0*potential/(C*C));
   return g;
 }
 
 /*Violation of null geodesics condition $g_{\mu\nu}p^{\mu}p^{\nu} = 0$.*/
-mydbl violation(mydbl r, mydbl p0, mydbl pr, double a, void (*model)(mydbl, mydbl, mydbl *, mydbl *))
+mydbl violation(mydbl r, mydbl p0, mydbl pr, double a, void (*model)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *))
 {
-  mydbl potential, der_potential;
-  (*model)((mydbl)(1.0*a), r, &potential, &der_potential);
+  mydbl potential, der_potential_radial, der_potential_temporal;
+  (*model)((mydbl)(1.0*a), 0.0, r, &potential, &der_potential_radial, &der_potential_temporal);
   mydbl f = -(1.0+2.0*potential/(C*C))*p0*p0 + (mydbl)(1.0*a*a)*(1.0-2.0*potential/(C*C))*pr*pr;
   return f;
 }
@@ -202,11 +212,11 @@ int main(void)
   /***SOLVES GEODESIC EQUATIONS FOR PERTURBED FRW UNIVERSE WITH A GIVEN POTENTIAL MODEL ***/
 
   /*Choose model to use for solving geodesics*/
-  void (*model_in_use)(mydbl, mydbl, mydbl *, mydbl *);
+  void (*model_in_use)(mydbl, mydbl, mydbl, mydbl *, mydbl *, mydbl *);
   model_in_use = hernquist_model;
 
   /*Initial conditions*/
-  mydbl ti = 7.0 ,x0, r = -1000.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference, pfrw, isw;
+  mydbl ti = 9.0 ,x0, r = -3000.0, p0 = 1.0e-3, pr, lambda = 0.0, energy1, energy, v, difft, difference, pfrw, isw;
   double difftfrw, aem, aobs;
   x0 = C*ti;
   aem = interpolator(spline1, (double)(1.0*ti), acc1);
