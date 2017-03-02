@@ -45,11 +45,10 @@ mydbl mass(mydbl a)
 /*Plummer model. Provided two variables pointers, this function stores the potential and the derivative of the potential for the Plummer model in these variables at a given radius.*/
 void plummer_model(mydbl a, mydbl adot, mydbl r, mydbl *potential, mydbl *der_potential_radial, mydbl *der_potential_temporal, mydbl *dx0dr)
 {
-  mydbl rsign = copysignl(1.0,r);
   *potential = -G*mass(a)/(sqrtl(A*A + r*r));
   *der_potential_radial = G*mass(a)*r/(powl(A*A+r*r, 1.5));
   *der_potential_temporal = *potential*GAMMA*adot/(a*a);
-  *dx0dr = rsign*a*sqrtl((C*C - 2.0*(*potential))/(C*C + 2.0*(*potential)));
+  *dx0dr = a*sqrtl((C*C - 2.0*(*potential))/(C*C + 2.0*(*potential)));
 }
 
 /*Hernquist model. Provided two variables pointers, this function stores the potential and the derivative of the potential for the Hernquist model in these variables at a given radius.*/
@@ -75,7 +74,7 @@ void hernquist_model(mydbl a, mydbl adot, mydbl r, mydbl *potential, mydbl *der_
       *der_potential_radial = G*mass(a)/powl(absr+A,2.0);
       *der_potential_temporal = *potential*GAMMA*adot/(a*a);
     }
-  *dx0dr = rsign*a*sqrtl((C*C - 2.0*(*potential))/(C*C + 2.0*(*potential)));
+  *dx0dr = a*sqrtl((C*C - 2.0*(*potential))/(C*C + 2.0*(*potential)));
 }
 
 /*Function of the $x^0$ differential equation for the geodesics.*/
